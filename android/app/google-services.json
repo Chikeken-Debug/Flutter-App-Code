@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "983611226485",
+    "firebase_url": "https://bird-system-default-rtdb.firebaseio.com",
+    "project_id": "bird-system",
+    "storage_bucket": "bird-system.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:983611226485:android:b311ab01f73699bc34bb3c",
+        "android_client_info": {
+          "package_name": "com.example.bird_system"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "983611226485-9ao1oivm5qehf5169i9c7f7ud770gdk3.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.birdsystem",
+            "certificate_hash": "90cde396df0839d19a774eedcdb4c9a39b91258c"
+          }
+        },
+        {
+          "client_id": "983611226485-98jvgj6itn32allu0jg4ub6dq2fhs2jp.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyB4kKeauh-VD5ljVg335U29htc_FNMFX_c"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "983611226485-98jvgj6itn32allu0jg4ub6dq2fhs2jp.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

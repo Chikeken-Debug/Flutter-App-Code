@@ -310,19 +310,20 @@ class AppCubit extends Cubit<AppStates> {
   }
 
   void checkKeepAlive(int allState) async {
-    if (allState == 1 || timerListener == null) {
-      Timer.periodic(Duration(seconds: 7), (Timer t) {
-        dataBase.child(uId).once().then((value) {
-          int currentKeepAlive = value.value['keepAlive'];
-          isEspConnected = (currentKeepAlive != lastKeepAliveValue);
-          lastKeepAliveValue = currentKeepAlive;
-          emit(KeepAliveChecked());
-          if (!isEspConnected) {
-            t.cancel();
-          }
-        });
-      });
-    }
+    isEspConnected = true;
+    // if (allState == 1 || timerListener == null) {
+    //   Timer.periodic(Duration(seconds: 7), (Timer t) {
+    //     dataBase.child(uId).once().then((value) {
+    //       int currentKeepAlive = value.value['keepAlive'];
+    //       isEspConnected = (currentKeepAlive != lastKeepAliveValue);
+    //       lastKeepAliveValue = currentKeepAlive;
+    //       emit(KeepAliveChecked());
+    //       if (!isEspConnected) {
+    //         t.cancel();
+    //       }
+    //     });
+    //   });
+    // }
   }
 
   String driveToImage(String driveUrl) {

@@ -22,9 +22,6 @@ class LoginPage extends StatelessWidget {
       listener: (BuildContext context, AppStates state) {},
       builder: (BuildContext context, AppStates state) {
         AppCubit cubit = AppCubit.get(context);
-        if (cubit.rememberMeCheckState) {
-          cubit.getUserLoginData(context);
-        }
 
         return SafeArea(
             child: GestureDetector(

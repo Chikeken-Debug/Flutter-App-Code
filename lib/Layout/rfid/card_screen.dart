@@ -59,11 +59,11 @@ class CardScreen extends StatelessWidget {
                     ? Padding(
                         padding: const EdgeInsets.all(8.0),
                         child: Container(
+                            padding: const EdgeInsets.all(15.0),
                             decoration: BoxDecoration(
                                 border: Border.all(color: customGreen),
                                 borderRadius: BorderRadius.circular(20)),
                             width: double.infinity,
-                            height: 200,
                             child: Column(
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: const [
@@ -210,6 +210,7 @@ class CardScreen extends StatelessWidget {
                                                                 .all(8.0),
                                                         child: FadeInImage
                                                             .assetNetwork(
+                                                          height: 120,
                                                           placeholder:
                                                               'images/vector.png',
                                                           imageErrorBuilder: (

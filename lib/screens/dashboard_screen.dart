@@ -22,6 +22,7 @@ class DashBoardScreen extends StatelessWidget {
         AppCubit cubit = AppCubit.get(context);
 
         if (cubit.espTime == "") {
+          print("from here");
           cubit.readFireDataOnce();
           cubit.checkKeepAlive(0);
           if (cubit.listener == null) {

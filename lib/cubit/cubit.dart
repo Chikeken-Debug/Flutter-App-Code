@@ -8,7 +8,6 @@ import 'package:bird_system/reusable/reusable_functions.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:csv/csv.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -30,7 +29,6 @@ class AppCubit extends Cubit<AppStates> {
   var listener;
 
   // state variables
-  bool rememberMeCheckState = true;
 
   // variables area
   String uId = ""; // user uid from firebase auth
@@ -311,19 +309,19 @@ class AppCubit extends Cubit<AppStates> {
 
   void checkKeepAlive(int allState) async {
     isEspConnected = true;
-    // if (allState == 1 || timerListener == null) {
-    //   Timer.periodic(Duration(seconds: 7), (Timer t) {
-    //     dataBase.child(uId).once().then((value) {
-    //       int currentKeepAlive = value.value['keepAlive'];
-    //       isEspConnected = (currentKeepAlive != lastKeepAliveValue);
-    //       lastKeepAliveValue = currentKeepAlive;
-    //       emit(KeepAliveChecked());
-    //       if (!isEspConnected) {
-    //         t.cancel();
-    //       }
-    //     });
-    //   });
-    // }
+    if (allState == 1 || timerListener == null) {
+      Timer.periodic(Duration(seconds: 7), (Timer t) {
+        dataBase.child(uId).once().then((value) {
+          int currentKeepAlive = value.value['keepAlive'];
+          isEspConnected = (currentKeepAlive != lastKeepAliveValue);
+          lastKeepAliveValue = currentKeepAlive;
+          emit(KeepAliveChecked());
+          if (!isEspConnected) {
+            t.cancel();
+          }
+        });
+      });
+    }
   }
 
   String driveToImage(String driveUrl) {
@@ -357,6 +355,7 @@ class AppCubit extends Cubit<AppStates> {
       usersCount = snap.value['usersCount'];
       lastKeepAliveValue = snap.value['keepAlive'];
       tempReading = objectsToList(snap.value['Temp'].values.toList(), 1);
+
       humReading = objectsToList(snap.value['Hum'].values.toList(), 1);
       airQuality = snap.value['airQuality'].toDouble();
       airQualityText = airRatioToText(airQuality.round());
@@ -393,7 +392,6 @@ class AppCubit extends Cubit<AppStates> {
       emit(GetDataDone());
     }).catchError((err) {
       print(err);
-      errorToast("anErrorHappened");
     });
   }
 
@@ -436,7 +434,6 @@ class AppCubit extends Cubit<AppStates> {
       currentPage = 0;
       navigateAndReplace(context, MainScreen());
     } else {
-      await Firebase.initializeApp();
       FirebaseAuth.instance
           .signInWithEmailAndPassword(email: nextId, password: nextPass)
           .then((value) {
@@ -500,6 +497,7 @@ class AppCubit extends Cubit<AppStates> {
           }
         case "airQuality":
           {
+            print("here");
             airQuality = event.snapshot.value.toDouble();
             airQualityText = airRatioToText(airQuality.round());
             break;
@@ -583,8 +581,8 @@ class AppCubit extends Cubit<AppStates> {
       if (networkConnection) {
         if (listener == null && uId != "") {
           readFireDataListener();
+          readFireDataOnce();
         }
-        readFireDataOnce();
       }
     });
   }
@@ -661,7 +659,6 @@ class AppCubit extends Cubit<AppStates> {
     * library to login "it take the email and password and return uid"
     * */
     emit(UserSignInLoading());
-    await Firebase.initializeApp();
     FirebaseAuth.instance
         .signInWithEmailAndPassword(email: email, password: password)
         .then((value) {
@@ -692,15 +689,13 @@ class AppCubit extends Cubit<AppStates> {
     });
   }
 
-  void getUserLoginData(BuildContext context) async {
-    rememberMeCheckState = false;
+  void getUserLoginData(bool? checkRemember) async {
     emit(CheckUserStateLoading());
     final prefs = await SharedPreferences.getInstance();
-    if (prefs.getBool("rememberMe") == true) {
+    if (checkRemember == true) {
       String uId = prefs.getString("uId")!;
       this.uId = uId;
       currentPage = 0;
-      navigateAndReplace(context, MainScreen());
       emit(UserSignUpDone());
     }
     networkListener();
@@ -721,7 +716,6 @@ class AppCubit extends Cubit<AppStates> {
     * */
     bool errorHappen = false;
     emit(UserSignUpLoading());
-    await Firebase.initializeApp();
     FirebaseAuth.instance
         .sendPasswordResetEmail(email: email)
         .catchError((err) {
@@ -742,7 +736,6 @@ class AppCubit extends Cubit<AppStates> {
     * library to sign up "it take the email and password and return uid"
     * */
     emit(UserSignUpLoading());
-    await Firebase.initializeApp();
     FirebaseAuth.instance
         .createUserWithEmailAndPassword(
       email: email,

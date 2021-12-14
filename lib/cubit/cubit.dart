@@ -28,8 +28,6 @@ class AppCubit extends Cubit<AppStates> {
   // ignore: prefer_typing_uninitialized_variables
   var listener;
 
-  // state variables
-
   // variables area
   String uId = ""; // user uid from firebase auth
 
@@ -42,11 +40,12 @@ class AppCubit extends Cubit<AppStates> {
   int currentPage = 0;
   bool networkConnection = true;
   // ignore: prefer_typing_uninitialized_variables
-  var timerListener;
+  bool timerListener = false;
   // devices variables
   List<bool> devicesBoolList = [true, true, true];
+  List<bool> devicesLoadBoolList = [false, false, false];
   List<bool> devicesAutoBoolList = [true, true, true];
-  List<bool> ledSetState = [true, true];
+  List<bool> ledLoadSetState = [false, false];
   List<bool> ledGetState = [true, true];
   String espTime = "";
   bool isEspConnected = false;
@@ -309,14 +308,18 @@ class AppCubit extends Cubit<AppStates> {
 
   void checkKeepAlive(int allState) async {
     isEspConnected = true;
-    if (allState == 1 || timerListener == null) {
-      Timer.periodic(Duration(seconds: 7), (Timer t) {
+    if (allState == 1 && timerListener == false) {
+      timerListener = true;
+      Timer.periodic(Duration(seconds: 20), (Timer t) {
         dataBase.child(uId).once().then((value) {
           int currentKeepAlive = value.value['keepAlive'];
           isEspConnected = (currentKeepAlive != lastKeepAliveValue);
+          print("esp connected $isEspConnected");
           lastKeepAliveValue = currentKeepAlive;
           emit(KeepAliveChecked());
           if (!isEspConnected) {
+            timerListener = false;
+            print("listner value = $timerListener");
             t.cancel();
           }
         });
@@ -336,6 +339,9 @@ class AppCubit extends Cubit<AppStates> {
   void virtualLogOutThenIn(BuildContext context, String nextId) {
     valuesToDefault();
     uId = nextId;
+    readFireDataOnce();
+    checkKeepAlive(0);
+    readFireDataListener();
     currentPage = 0;
     navigateAndReplace(context, MainScreen());
   }
@@ -359,17 +365,20 @@ class AppCubit extends Cubit<AppStates> {
       humReading = objectsToList(snap.value['Hum'].values.toList(), 1);
       airQuality = snap.value['airQuality'].toDouble();
       airQualityText = airRatioToText(airQuality.round());
-      espTime = snap.value['Time'];
-      List<String> deviceName = ['insideLedGet', 'outsideLedGet'];
+      Map tempEspTime = snap.value['Time'];
+      espTime =
+          "${tempEspTime['Hour']}:${tempEspTime['Minute']}:${tempEspTime['Seconds']}";
+
+      List<String> deviceName = ['Get_Led1', 'Get_Light'];
       for (int i = 0; i < deviceName.length; i++) {
         ledGetState[i] = '${snap.value['Lights'][deviceName[i]]}' == '1';
       }
-      deviceName = ['heaterAauto', 'heaterBAuto', 'FanAuto'];
-      for (int i = 0; i < deviceName.length; i++) {
-        devicesAutoBoolList[i] =
-            '${snap.value['Heaters'][deviceName[i]]}' == '1';
-      }
-      deviceName = ['heaterA', 'heaterB', 'Fan'];
+      // deviceName = ['heaterAauto', 'heaterBAuto', 'FanAuto'];
+      // for (int i = 0; i < deviceName.length; i++) {
+      //   devicesAutoBoolList[i] =
+      //       '${snap.value['Heaters'][deviceName[i]]}' == '1';
+      // }
+      deviceName = ['Get_ManualHA', 'Get_ManualHB', 'Get_ManualF'];
       for (int i = 0; i < deviceName.length; i++) {
         devicesBoolList[i] = '${snap.value['Heaters'][deviceName[i]]}' == '1';
       }
@@ -390,8 +399,6 @@ class AppCubit extends Cubit<AppStates> {
       currentUserId = "${snap.value['RFID']['lastID'].split(',')[0]}";
       currentUserState = "${snap.value['RFID']['lastID'].split(',')[1]}";
       emit(GetDataDone());
-    }).catchError((err) {
-      print(err);
     });
   }
 
@@ -455,19 +462,23 @@ class AppCubit extends Cubit<AppStates> {
   }
 
   void readFireDataListener() {
+    print("firestore listner");
+    print(uId);
     listener = dataBase.child(uId).onChildChanged.listen((event) {
       switch (event.snapshot.key) {
         case 'Heaters':
           {
-            List<String> deviceName = ['heaterAauto', 'heaterBAuto', 'FanAuto'];
+            List<String> deviceName = [
+              'Get_ManualHA',
+              'Get_ManualHB',
+              'Get_ManualF'
+            ];
             for (int i = 0; i < deviceName.length; i++) {
-              devicesAutoBoolList[i] =
-                  '${event.snapshot.value[deviceName[i]]}' == '1';
-            }
-            deviceName = ['heaterA', 'heaterB', 'Fan'];
-            for (int i = 0; i < deviceName.length; i++) {
-              devicesBoolList[i] =
-                  '${event.snapshot.value[deviceName[i]]}' == '1';
+              bool temp = '${event.snapshot.value[deviceName[i]]}' == '1';
+              if (devicesBoolList[i] != temp) {
+                devicesBoolList[i] = temp;
+                devicesLoadBoolList[i] = false;
+              }
             }
             break;
           }
@@ -484,27 +495,33 @@ class AppCubit extends Cubit<AppStates> {
           }
         case 'Lights':
           {
-            List<String> deviceName = ['insideLedGet', 'outsideLedGet'];
+            List<String> deviceName = ['Get_Led1', 'Get_Light'];
             for (int i = 0; i < deviceName.length; i++) {
-              ledGetState[i] = '${event.snapshot.value[deviceName[i]]}' == '1';
+              bool temp = '${event.snapshot.value[deviceName[i]]}' == '1';
+              if (ledGetState[i] != temp) {
+                ledGetState[i] = temp;
+                ledLoadSetState[i] = false;
+              }
             }
             break;
           }
         case 'Time':
           {
-            espTime = event.snapshot.value;
+            Map tempEspTime = event.snapshot.value;
+            espTime =
+                "${tempEspTime['Hour']}:${tempEspTime['Minute']}:${tempEspTime['Seconds']}";
             break;
           }
         case "airQuality":
           {
-            print("here");
             airQuality = event.snapshot.value.toDouble();
             airQualityText = airRatioToText(airQuality.round());
             break;
           }
         case "keepAlive":
           {
-            lastKeepAliveValue = event.snapshot.value;
+            print("keep alive come mother fucker");
+            // lastKeepAliveValue = event.snapshot.value;
             isEspConnected = true;
             checkKeepAlive(1);
             break;
@@ -663,6 +680,9 @@ class AppCubit extends Cubit<AppStates> {
         .signInWithEmailAndPassword(email: email, password: password)
         .then((value) {
       uId = value.user!.uid + '_1';
+      readFireDataOnce();
+      checkKeepAlive(0);
+      readFireDataListener();
       if (value.user!.emailVerified) {
         saveData(uId);
         currentPage = 0;
@@ -695,6 +715,9 @@ class AppCubit extends Cubit<AppStates> {
     if (checkRemember == true) {
       String uId = prefs.getString("uId")!;
       this.uId = uId;
+      readFireDataOnce();
+      checkKeepAlive(0);
+      readFireDataListener();
       currentPage = 0;
       emit(UserSignUpDone());
     }
@@ -729,8 +752,6 @@ class AppCubit extends Cubit<AppStates> {
     }).timeout(Duration(minutes: 2));
   }
 
-  // finished
-
   void signUp(BuildContext context, String email, String password) async {
     /*
     * library to sign up "it take the email and password and return uid"
@@ -760,9 +781,9 @@ class AppCubit extends Cubit<AppStates> {
       "whichHeater" : "A"
     },
     "Hum" : {
-      "hum1" : 12,
-      "hum2" : 20,
-      "hum3" : 40
+      "hum1" : 0,
+      "hum2" : 0,
+      "hum3" : 0
     },
     "Lights" : {
       "insideLedGet" : 0,
@@ -781,7 +802,7 @@ class AppCubit extends Cubit<AppStates> {
     },
     "Time" : "-",
     "usersCount" : 1 ,
-    "airQuality" : 15,
+    "airQuality" : 0,
     "configFlag" : 0,
     "keepAlive" : 0 ,
     "newConfig" : {
@@ -824,15 +845,18 @@ class AppCubit extends Cubit<AppStates> {
   }
 
   void deviceStatus(int device) {
-    List<String> deviceName = ['heaterA', 'heaterB', 'Fan'];
     if (!devicesAutoBoolList[device]) {
-      devicesBoolList[device] = !devicesBoolList[device];
-      dataBase.child(uId).child('Heaters').update(
-          {deviceName[device]: devicesBoolList[device] ? 1 : 0}).then((value) {
+      List<String> deviceName = ['Set_ManualHA', 'Set_ManualHB', 'Set_ManualF'];
+      devicesLoadBoolList[device] = true;
+      dataBase.child(uId).child('Heaters').update({
+        deviceName[device]: !devicesBoolList[device] ? "1" : "0"
+      }).then((value) {
         emit(ChangeDeviceStatus());
       }).catchError((err) {
         errorToast("an error happened");
       });
+    } else {
+      errorToast("device is manual");
     }
   }
 
@@ -840,8 +864,9 @@ class AppCubit extends Cubit<AppStates> {
     List<String> deviceName = ['heaterAauto', 'heaterBAuto', 'FanAuto'];
 
     devicesAutoBoolList[index] = !devicesAutoBoolList[index];
-    dataBase.child(uId).child('Heaters').update(
-        {deviceName[index]: devicesAutoBoolList[index] ? 1 : 0}).then((value) {
+    dataBase.child(uId).child('Heaters').update({
+      deviceName[index]: devicesAutoBoolList[index] ? "1" : "0"
+    }).then((value) {
       emit(ChangeDeviceStatus());
     }).catchError((err) {
       errorToast("an error happened");
@@ -849,13 +874,11 @@ class AppCubit extends Cubit<AppStates> {
   }
 
   void ledStatus(int index) {
-    List<String> deviceName = ['insideLedGet', 'outsideLedGet'];
-    ledSetState[index] = !ledSetState[index];
-    ledGetState[index] = !ledGetState[index];
-    dataBase
-        .child(uId)
-        .child('Lights')
-        .update({deviceName[index]: ledSetState[index] ? 1 : 0}).then((value) {
+    List<String> deviceName = ['Set_Led1', 'Set_Light'];
+
+    ledLoadSetState[index] = true;
+    dataBase.child(uId).child('Lights').update(
+        {deviceName[index]: !ledGetState[index] ? '1' : '0'}).then((value) {
       emit(ChangeDeviceStatus());
     }).catchError((err) {
       errorToast("an error happened");

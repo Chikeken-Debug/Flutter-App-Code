@@ -580,7 +580,7 @@ class MainScreen extends StatelessWidget {
                     ? Center(
                         child: Column(
                           mainAxisAlignment: MainAxisAlignment.center,
-                          children: const [
+                          children: [
                             Icon(
                               Icons.wrong_location_outlined,
                               color: Colors.grey,
@@ -592,7 +592,31 @@ class MainScreen extends StatelessWidget {
                                   fontSize: 20,
                                   fontWeight: FontWeight.bold,
                                   color: Colors.grey),
-                            )
+                            ),
+                            Padding(
+                              padding: const EdgeInsets.all(8.0),
+                              child: TextButton(
+                                  child: Text("Config",
+                                      style: TextStyle(
+                                          color: customViolet, fontSize: 17)),
+                                  style: ButtonStyle(
+                                      padding:
+                                          MaterialStateProperty.all<EdgeInsets>(
+                                              EdgeInsets.all(15)),
+                                      foregroundColor:
+                                          MaterialStateProperty.all<Color>(
+                                              customViolet),
+                                      shape: MaterialStateProperty.all<
+                                              RoundedRectangleBorder>(
+                                          RoundedRectangleBorder(
+                                              borderRadius:
+                                                  BorderRadius.circular(18.0),
+                                              side: BorderSide(
+                                                  color: customViolet)))),
+                                  onPressed: () {
+                                    displayConfigDialog(context);
+                                  }),
+                            ),
                           ],
                         ),
                       )
@@ -630,7 +654,7 @@ class MainScreen extends StatelessWidget {
                 body: Center(
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
-                    children: const [
+                    children: [
                       Icon(
                         Icons
                             .signal_wifi_statusbar_connected_no_internet_4_outlined,
@@ -643,7 +667,30 @@ class MainScreen extends StatelessWidget {
                             fontSize: 20,
                             fontWeight: FontWeight.bold,
                             color: Colors.grey),
-                      )
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.all(8.0),
+                        child: TextButton(
+                            child: Text("Config",
+                                style: TextStyle(
+                                    color: customViolet, fontSize: 17)),
+                            style: ButtonStyle(
+                                padding: MaterialStateProperty.all<EdgeInsets>(
+                                    EdgeInsets.all(15)),
+                                foregroundColor:
+                                    MaterialStateProperty.all<Color>(
+                                        customViolet),
+                                shape: MaterialStateProperty.all<
+                                        RoundedRectangleBorder>(
+                                    RoundedRectangleBorder(
+                                        borderRadius:
+                                            BorderRadius.circular(18.0),
+                                        side:
+                                            BorderSide(color: customViolet)))),
+                            onPressed: () {
+                              displayConfigDialog(context);
+                            }),
+                      ),
                     ],
                   ),
                 ));

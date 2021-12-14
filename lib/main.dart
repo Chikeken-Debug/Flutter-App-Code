@@ -1,5 +1,4 @@
 import 'package:bird_system/reusable/reusable_functions.dart';
-import 'package:bloc/bloc.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -7,7 +6,6 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'Layout/login_page.dart';
 import 'Layout/main_screen.dart';
-import 'cubit/bloc_observer.dart';
 import 'cubit/cubit.dart';
 
 Future<void> main() async {
@@ -15,7 +13,7 @@ Future<void> main() async {
 
   await Firebase.initializeApp();
 
-  Bloc.observer = MyBlocObserver();
+  // Bloc.observer = MyBlocObserver();
 
   final prefs = await SharedPreferences.getInstance();
   bool? rememberMe = prefs.getBool("rememberMe");

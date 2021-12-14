@@ -14,6 +14,7 @@ class TableScreen extends StatelessWidget {
       RefreshController(initialRefresh: false);
 
   TableScreen({Key? key}) : super(key: key);
+  int ratio = 1;
 
   @override
   Widget build(BuildContext context) {
@@ -25,6 +26,7 @@ class TableScreen extends StatelessWidget {
           cubit.getAllSensorsData();
         }
         return Scaffold(
+          backgroundColor: Colors.white,
           appBar: AppBar(
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.vertical(

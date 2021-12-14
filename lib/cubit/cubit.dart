@@ -206,6 +206,7 @@ class AppCubit extends Cubit<AppStates> {
     emit(GetAllGraphDataLoading());
     var url = Uri.parse(
         'https://script.google.com/macros/s/AKfycbwnPWp-hpkaF7RCMeWMBkYPxvx4_9z6Wlqz5soTzwsNukFcP3Qm6CWkUOBWDLOUderXjw/exec?datalength=$length&uid=$uId&alldatabool=0');
+    print(url);
     http.read(url).catchError((e) {
       errorToast("Error happened Please Try again");
       print(e);

@@ -89,8 +89,9 @@ class EditUserScreen extends StatelessWidget {
                       'ID': id,
                       'Phone': phoneController.text,
                       'PersonRole': roleController.text,
-                      'ImageLink':
-                          photoController.text.replaceAll("https://", "")
+                      'ImageLink': photoController.text.isEmpty
+                          ? "null"
+                          : photoController.text.replaceAll("https://", "")
                     };
                     cubit.editEmployee(data, context);
                   }

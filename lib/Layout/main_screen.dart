@@ -33,6 +33,8 @@ class MainScreen extends StatelessWidget {
       builder: (BuildContext context, AppStates state) {
         AppCubit cubit = AppCubit.get(context);
 
+        print("esp connected ? ${cubit.isEspConnected}");
+
         return cubit.networkConnection
             ? Scaffold(
                 key: scaffoldKey,
@@ -42,7 +44,7 @@ class MainScreen extends StatelessWidget {
                   backgroundColor:
                       cubit.isEspConnected ? Colors.green : Colors.red,
                   onPressed: () {},
-                  tooltip: cubit.espTime.replaceAll(',', ':'),
+                  tooltip: cubit.espTime,
                   child: Icon(
                     Icons.electrical_services_outlined,
                     color: Colors.white,
@@ -576,7 +578,7 @@ class MainScreen extends StatelessWidget {
                       Icon(Icons.bar_chart_rounded,
                           size: 30, color: Colors.white.withOpacity(0.7)),
                     ]),
-                body: cubit.espTime == '-'
+                body: cubit.espTime == '::'
                     ? Center(
                         child: Column(
                           mainAxisAlignment: MainAxisAlignment.center,

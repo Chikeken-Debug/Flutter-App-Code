@@ -69,6 +69,9 @@ class LoginPage extends StatelessWidget {
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   TextFormField(
+                                      autofillHints: const [
+                                        AutofillHints.email
+                                      ],
                                       controller: emailController,
                                       keyboardType: TextInputType.emailAddress,
                                       validator: (value) {

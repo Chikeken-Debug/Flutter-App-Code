@@ -6,6 +6,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'Layout/login_page.dart';
 import 'Layout/main_screen.dart';
+import 'cubit/bloc_observer.dart';
 import 'cubit/cubit.dart';
 
 Future<void> main() async {

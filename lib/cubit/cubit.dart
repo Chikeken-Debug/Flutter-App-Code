@@ -193,6 +193,7 @@ class AppCubit extends Cubit<AppStates> {
     mainDrawerFarmsListBool = false;
     currentPage = 0;
     isEspConnected = false;
+    timerListener = false;
     allGraphData = "";
     allGraphDataList = [];
     activeUser = -1;
@@ -209,6 +210,12 @@ class AppCubit extends Cubit<AppStates> {
       errorToast("Error happened Please Try again");
       print(e);
     }).then((value) {
+      print(value);
+      if (value.contains("has not a previous Data")) {
+        emit(GetAllGraphDataDone());
+        numberOfGraphedData = -1;
+        return;
+      }
       realNumberOfGraphedData =
           int.parse(value.split('] [[')[0].split('=[')[1]);
       if (realNumberOfGraphedData < length) {
@@ -255,6 +262,11 @@ class AppCubit extends Cubit<AppStates> {
       errorToast("Error happened Please Try again");
       print(e);
     }).then((value) {
+      print(value);
+      if (value.contains("has not a previous Data")) {
+        infoToast("no data yet");
+        return;
+      }
       int numberOfRows = int.parse(value.split('] [[')[0].split('=[')[1]);
       value = value.split('[[')[1];
       value = value.replaceAll('],[', '\n');
@@ -307,10 +319,15 @@ class AppCubit extends Cubit<AppStates> {
   }
 
   void checkKeepAlive(int allState) async {
-    isEspConnected = true;
     if (allState == 1 && timerListener == false) {
       timerListener = true;
+      isEspConnected = true;
       Timer.periodic(Duration(seconds: 20), (Timer t) {
+        print(uId);
+        if (uId == "") {
+          t.cancel();
+          return;
+        }
         dataBase.child(uId).once().then((value) {
           int currentKeepAlive = value.value['keepAlive'];
           isEspConnected = (currentKeepAlive != lastKeepAliveValue);
@@ -340,7 +357,6 @@ class AppCubit extends Cubit<AppStates> {
     valuesToDefault();
     uId = nextId;
     readFireDataOnce();
-    checkKeepAlive(0);
     readFireDataListener();
     currentPage = 0;
     navigateAndReplace(context, MainScreen());
@@ -359,6 +375,7 @@ class AppCubit extends Cubit<AppStates> {
     emit(GetDataLoading());
     dataBase.child(uId).once().then((snap) {
       usersCount = snap.value['usersCount'];
+      print("here count $usersCount");
       lastKeepAliveValue = snap.value['keepAlive'];
       tempReading = objectsToList(snap.value['Temp'].values.toList(), 1);
 
@@ -436,7 +453,7 @@ class AppCubit extends Cubit<AppStates> {
           .child(uId)
           .child("newConfig")
           .update({'pass': wifiName, 'ssid': wifiPassword});
-      dataBase.child(uId).update({'configFlag': 1});
+      dataBase.child(uId).update({'configFlag': '1'});
       infoToast('ESP Configuration set');
       currentPage = 0;
       navigateAndReplace(context, MainScreen());
@@ -521,8 +538,9 @@ class AppCubit extends Cubit<AppStates> {
         case "keepAlive":
           {
             print("keep alive come mother fucker");
-            // lastKeepAliveValue = event.snapshot.value;
+            lastKeepAliveValue = -1;
             isEspConnected = true;
+            print("esp connected ? ${isEspConnected}");
             checkKeepAlive(1);
             break;
           }
@@ -552,6 +570,7 @@ class AppCubit extends Cubit<AppStates> {
             break;
           }
       }
+      print("keep alive come mother fucker 2");
       emit(GetDataDone());
     });
   }
@@ -611,61 +630,8 @@ class AppCubit extends Cubit<AppStates> {
           .child(uId.split('_')[0] + '_$i')
           .update({'usersCount': usersCount});
     }
-    String jsonData = ''' 
-      {
-    "Heaters" : {
-      "Fan" : 0,
-      "FanAuto" : 1,
-      "coolerStatus" : 1,
-      "heaterA" : 0,
-      "heaterAauto" : 1,
-      "heaterB" : 0,
-      "heaterBAuto" : 1,
-      "startTime" : {
-        "A" : 0,
-        "B" : 0
-      },
-      "whichHeater" : "A"
-    },
-    "Hum" : {
-      "hum1" : 12,
-      "hum2" : 20,
-      "hum3" : 40
-    },
-    "Lights" : {
-      "insideLedGet" : 0,
-      "insideLedSet" : 0,
-      "outsideLedGet" : 0,
-      "outsideLedSet" : 0
-    },
-    "RFID" : {
-      "data" : "Name,photo",
-      "lastID" : "NULL,notfound"
-    },
-    "Temp" : {
-      "temp1" : 70,
-      "temp2" : 50,
-      "temp3" : 20
-    },
-    "Time" : "-",
-    "usersCount" : $usersCount ,
-    "airQuality" : 15,
-    "configFlag" : 0,
-    "keepAlive" : 0 ,
-    "newConfig" : {
-      "pass" : 123456789,
-      "ssid" : "menam",
-      "uId" : "${uId.split('_')[0] + '_' + '$usersCount'}" 
-    },
-    "resetFlag" : 0,
-    "valueRanges" : {
-      "delay" : "10",
-      "temp" : "25,35",
-      "timeToWait" : "30",
-      "vent" : "350,400"
-    }
-  }
-      ''';
+    String jsonData = firebaseInitialData(
+        uId.split('_')[0] + '_' + '$usersCount', usersCount);
     var data = json.decode(jsonData);
     dataBase.child(uId.split('_')[0] + '_$usersCount').set(data);
     emit(AddFarmDeviseState());
@@ -681,7 +647,6 @@ class AppCubit extends Cubit<AppStates> {
         .then((value) {
       uId = value.user!.uid + '_1';
       readFireDataOnce();
-      checkKeepAlive(0);
       readFireDataListener();
       if (value.user!.emailVerified) {
         saveData(uId);
@@ -716,7 +681,6 @@ class AppCubit extends Cubit<AppStates> {
       String uId = prefs.getString("uId")!;
       this.uId = uId;
       readFireDataOnce();
-      checkKeepAlive(0);
       readFireDataListener();
       currentPage = 0;
       emit(UserSignUpDone());
@@ -752,6 +716,71 @@ class AppCubit extends Cubit<AppStates> {
     }).timeout(Duration(minutes: 2));
   }
 
+  String firebaseInitialData(String newId, int userCount) {
+    return '''
+    {
+    "CodeVersion" : "1.0.2.1",
+    "Heaters" : {
+      "Cooler_status" : 0,
+      "FanAuto" : "0",
+      "Get_ManualF" : 0,
+      "Get_ManualHA" : 0,
+      "Get_ManualHB" : 0,
+      "Set_ManualF" : "0",
+      "Set_ManualHA" : "0",
+      "Set_ManualHB" : "0",
+      "WhichHeater" : "0",
+      "heaterA_status" : 0,
+      "heaterAauto" : "0",
+      "heaterBAuto" : "0",
+      "heaterB_status" : 0,
+      "startTime" : {
+        "A" : "FF",
+        "B" : "FF"
+      },
+      "whichHeater" : "0"
+    },
+    "Hum" : {
+    "hum1" : 0
+    },
+    "Lights" : {
+      "Get_Led1" : 0,
+      "Get_Light" : 0,
+      "Set_Led1" : "0",
+      "Set_Light" : "0"
+    },
+    "RFID" : {
+      "data" : ",",
+      "lastID" : "NULL,notfound"
+    },
+    "Temp" : {
+    "hum1" : 0
+    },
+    "Time" : {
+      "Hour" : "",
+      "Minute" : "",
+      "Seconds" : ""
+    },
+    "airQuality" : 0,
+    "configFlag" : "FF",
+    "keepAlive" : 0,
+    "newConfig" : {
+      "pass" : 123456789,
+      "ssid" : "menam",
+      "uId" : "$newId"
+    },
+    "resetFlag" : "0",
+    "usersCount" : $userCount,
+    "valueRanges" : {
+      "delay" : "0",
+      "temp" : "22,35",
+      "timeToWait" : "30",
+      "vent" : "350,400"
+    }
+}
+    ''';
+  }
+
   void signUp(BuildContext context, String email, String password) async {
     /*
     * library to sign up "it take the email and password and return uid"
@@ -764,61 +793,7 @@ class AppCubit extends Cubit<AppStates> {
     )
         .then((value) {
       uId = value.user!.uid + '_1';
-      String jsonData = ''' 
-      {
-    "Heaters" : {
-       "Fan" : 0,
-      "FanAuto" : 1,
-      "coolerStatus" : 1,
-      "heaterA" : 0,
-      "heaterAauto" : 1,
-      "heaterB" : 0,
-      "heaterBAuto" : 1,
-      "startTime" : {
-        "A" : 0,
-        "B" : 0
-      },
-      "whichHeater" : "A"
-    },
-    "Hum" : {
-      "hum1" : 0,
-      "hum2" : 0,
-      "hum3" : 0
-    },
-    "Lights" : {
-      "insideLedGet" : 0,
-      "insideLedSet" : 0,
-      "outsideLedGet" : 0,
-      "outsideLedSet" : 0
-    },
-    "RFID" : {
-      "data" : "Name,photo",
-      "lastID" : "NULL,notfound"
-    },
-    "Temp" : {
-      "temp1" : 70,
-      "temp2" : 50,
-      "temp3" : 20
-    },
-    "Time" : "-",
-    "usersCount" : 1 ,
-    "airQuality" : 0,
-    "configFlag" : 0,
-    "keepAlive" : 0 ,
-    "newConfig" : {
-      "pass" : 123456789,
-      "ssid" : "menam",
-      "uId" : "$uId"
-    },
-    "resetFlag" : 0,
-    "valueRanges" : {
-      "delay" : "10",
-      "temp" : "25,35",
-      "timeToWait" : "30",
-      "vent" : "350,400"
-    }
-  }
-      ''';
+      String jsonData = firebaseInitialData(uId, 1);
 
       var data = json.decode(jsonData);
       dataBase.child(uId).set(data);
@@ -840,6 +815,7 @@ class AppCubit extends Cubit<AppStates> {
           });
     }).catchError((err) {
       emit(UserSignUpError());
+      print(err);
       errorToast(err.toString().split(']')[1].trim());
     });
   }
@@ -900,7 +876,7 @@ class AppCubit extends Cubit<AppStates> {
   }
 
   void sendResetEsp() {
-    dataBase.child(uId).update({'resetFlag': 1}).then((value) {
+    dataBase.child(uId).update({'resetFlag': "1"}).then((value) {
       infoToast('ESP reset successfully');
       emit(SendDataToFireState());
     }).catchError((err) {

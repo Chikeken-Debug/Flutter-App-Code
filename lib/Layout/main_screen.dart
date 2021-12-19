@@ -1,3 +1,7 @@
+import 'dart:convert';
+
+import 'package:animated_widgets/widgets/rotation_animated.dart';
+import 'package:animated_widgets/widgets/shake_animated_widget.dart';
 import 'package:bird_system/Layout/configuration_screen.dart';
 import 'package:bird_system/Layout/rfid/card_screen.dart';
 import 'package:bird_system/cubit/cubit.dart';
@@ -14,7 +18,9 @@ import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'dart:math' as math; // import this
+import 'dart:math' as math;
+
+import 'package:shared_preferences/shared_preferences.dart'; // import this
 
 // ignore: must_be_immutable
 class MainScreen extends StatelessWidget {
@@ -22,9 +28,24 @@ class MainScreen extends StatelessWidget {
 
   var formKey = GlobalKey<FormState>();
 
+  Map<String, dynamic>? notificationData;
+
   List<Widget> activeScreen = [DashBoardScreen(), ChartScreen()];
 
-  MainScreen({Key? key}) : super(key: key);
+  MainScreen(String? notificationRowData, {Key? key}) : super(key: key) {
+    if (notificationRowData != null) {
+      try {
+        notificationData = json.decode(notificationRowData);
+      } catch (err) {
+        notificationData = null;
+        print("error happened");
+        print(err);
+      }
+      SharedPreferences.getInstance().then((prefs) {
+        prefs.remove("notificationInfo");
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -32,8 +53,6 @@ class MainScreen extends StatelessWidget {
       listener: (BuildContext context, AppStates state) {},
       builder: (BuildContext context, AppStates state) {
         AppCubit cubit = AppCubit.get(context);
-
-        print("esp connected ? ${cubit.isEspConnected}");
 
         return cubit.networkConnection
             ? Scaffold(
@@ -622,7 +641,36 @@ class MainScreen extends StatelessWidget {
                           ],
                         ),
                       )
-                    : activeScreen[cubit.currentPage],
+                    : Stack(alignment: Alignment.topRight, children: [
+                        activeScreen[cubit.currentPage],
+                        Visibility(
+                          visible: notificationData != null,
+                          child: Padding(
+                            padding: const EdgeInsets.all(15.0),
+                            child: CircleAvatar(
+                              radius: 25,
+                              backgroundColor: Colors.red,
+                              child: Center(
+                                child: IconButton(
+                                  iconSize: 30,
+                                  color: Colors.white,
+                                  onPressed: () {
+                                    notificationFeedback(context, cubit);
+                                  },
+                                  icon: ShakeAnimatedWidget(
+                                    enabled: true,
+                                    duration: Duration(milliseconds: 1500),
+                                    shakeAngle: Rotation.deg(z: 40),
+                                    child: Icon(
+                                      Icons.notifications_active_outlined,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ]),
               )
             : Scaffold(
                 appBar: AppBar(
@@ -757,5 +805,28 @@ class MainScreen extends StatelessWidget {
             ),
           );
         });
+  }
+
+  void notificationFeedback(BuildContext context, AppCubit cubit) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title:
+              Text(notificationData!['Title'] ?? "something unmoral happened"),
+          content: Text(notificationData!['Body'] ?? "Check The dashboard"),
+          actions: [
+            OutlinedButton(
+                onPressed: () {
+                  Navigator.of(context).pop();
+                },
+                child: Text("Ok")),
+          ],
+        );
+      },
+    ).then((value) {
+      notificationData = null;
+      cubit.emit(ChangeDeviceStatus());
+    });
   }
 }

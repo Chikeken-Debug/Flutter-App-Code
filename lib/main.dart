@@ -1,4 +1,3 @@
-import 'package:bird_system/Layout/notification_screen.dart';
 import 'package:bird_system/reusable/fire_message.dart';
 import 'package:bird_system/reusable/reusable_functions.dart';
 import 'package:firebase_core/firebase_core.dart';
@@ -53,11 +52,7 @@ class MyApp extends StatelessWidget {
         theme: ThemeData(
           primarySwatch: Colors.lightGreen,
         ),
-        home: rememberMe ?? false
-            ? notificationData != null
-                ? NotificationPage(notificationData, true)
-                : MainScreen()
-            : LoginPage(),
+        home: rememberMe ?? false ? MainScreen(notificationData) : LoginPage(),
       ),
     );
   }

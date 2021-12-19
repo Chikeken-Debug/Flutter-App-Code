@@ -106,7 +106,7 @@ class AppCubit extends Cubit<AppStates> {
       currentPage = 0;
       employeesNamesList = [];
       thereEmployee = true;
-      navigateAndReplace(context, MainScreen());
+      navigateAndReplace(context, MainScreen(null));
 
       emit(SendToEditDone());
     }).catchError((err) {
@@ -377,7 +377,7 @@ class AppCubit extends Cubit<AppStates> {
     readFireDataOnce();
     readFireDataListener();
     currentPage = 0;
-    navigateAndReplace(context, MainScreen());
+    navigateAndReplace(context, MainScreen(null));
   }
 
   void logOut(BuildContext context) async {
@@ -449,7 +449,7 @@ class AppCubit extends Cubit<AppStates> {
     }).then((value) {
       if (value.trim() != "Failed") {
         currentPage = 0;
-        navigateAndReplace(context, MainScreen());
+        navigateAndReplace(context, MainScreen(null));
         emit(SendConfigDone());
       } else {
         errorToast("Error happened ,make sure Your WIFI and pass is correct ");
@@ -474,7 +474,7 @@ class AppCubit extends Cubit<AppStates> {
       dataBase.child(uId).update({'configFlag': '1'});
       infoToast('ESP Configuration set');
       currentPage = 0;
-      navigateAndReplace(context, MainScreen());
+      navigateAndReplace(context, MainScreen(null));
     } else {
       FirebaseAuth.instance
           .signInWithEmailAndPassword(email: nextId, password: nextPass)
@@ -486,7 +486,7 @@ class AppCubit extends Cubit<AppStates> {
             .update({'pass': wifiName, 'ssid': wifiPassword, 'uId': nextUId});
         dataBase.child(uId).update({'configFlag': 1});
         currentPage = 0;
-        navigateAndReplace(context, MainScreen());
+        navigateAndReplace(context, MainScreen(null));
         infoToast('ESP Configuration set');
         emit(SendConfigDone());
       }).catchError((err) {
@@ -669,7 +669,7 @@ class AppCubit extends Cubit<AppStates> {
       if (value.user!.emailVerified) {
         saveData(uId);
         currentPage = 0;
-        navigateAndReplace(context, MainScreen());
+        navigateAndReplace(context, MainScreen(null));
         emit(UserSignUpDone());
       } else {
         emit(UserSignInVerifyError());

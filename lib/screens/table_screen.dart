@@ -14,7 +14,8 @@ class TableScreen extends StatelessWidget {
       RefreshController(initialRefresh: false);
 
   TableScreen({Key? key}) : super(key: key);
-  int ratio = 1;
+  double ratio = 5;
+  double _baseScaleFactor = 1.0;
 
   @override
   Widget build(BuildContext context) {
@@ -69,7 +70,6 @@ class TableScreen extends StatelessWidget {
                 )
               : SmartRefresher(
                   enablePullUp: false,
-                  header: WaterDropHeader(),
                   controller: _refreshController,
                   onRefresh: () async {
                     cubit.getAllSensorsData().then((value) {
@@ -99,191 +99,87 @@ class TableScreen extends StatelessWidget {
                             ],
                           ),
                         )
-                      : SingleChildScrollView(
-                          scrollDirection: Axis.vertical,
-                          child: Padding(
-                            padding: const EdgeInsets.all(10.0),
-                            child: Column(
-                              children: [
-                                SingleChildScrollView(
-                                  scrollDirection: Axis.horizontal,
-                                  child: Table(
-                                    columnWidths: const {
-                                      0: FixedColumnWidth(150),
-                                    },
-                                    defaultColumnWidth: FixedColumnWidth(120.0),
-                                    border: TableBorder.all(width: 1.0),
-                                    children: cubit.allGraphDataList
-                                        .map((item) {
-                                          return TableRow(
-                                              children: item.map((row) {
-                                            return Container(
-                                              width: 200,
-                                              color: Colors.white,
-                                              child: Padding(
-                                                padding:
-                                                    const EdgeInsets.all(8.0),
-                                                child: Center(
-                                                  child: Text(
-                                                    row
-                                                        .toString()
-                                                        .replaceAll('-', '\n'),
-                                                    style: TextStyle(
-                                                        fontSize: 20.0),
+                      : GestureDetector(
+                          onScaleStart: (details) {
+                            _baseScaleFactor = ratio;
+                          },
+                          onScaleUpdate: (details) {
+                            print("scaling");
+                            ratio = _baseScaleFactor * details.scale;
+                          },
+                          onScaleEnd: (details) {
+                            print("end");
+                            cubit.emit(ChangeDeviceStatus());
+                          },
+                          child: SingleChildScrollView(
+                              scrollDirection: Axis.vertical,
+                              child: Padding(
+                                padding: const EdgeInsets.all(10.0),
+                                child: Column(
+                                  children: [
+                                    SingleChildScrollView(
+                                      scrollDirection: Axis.horizontal,
+                                      child: Table(
+                                        columnWidths: {
+                                          0: FixedColumnWidth(30 * ratio),
+                                        },
+                                        defaultColumnWidth:
+                                            FixedColumnWidth(24 * ratio),
+                                        border: TableBorder.all(width: 1.0),
+                                        children: cubit.allGraphDataList
+                                            .map((item) {
+                                              return TableRow(
+                                                  children: item.map((row) {
+                                                return Container(
+                                                  width: 40 * ratio,
+                                                  color: Colors.white,
+                                                  child: Padding(
+                                                    padding:
+                                                        const EdgeInsets.all(
+                                                            8.0),
+                                                    child: Center(
+                                                      child: Text(
+                                                        row
+                                                            .toString()
+                                                            .replaceAll(
+                                                                '-', '\n'),
+                                                        style: TextStyle(
+                                                            fontSize:
+                                                                4 * ratio),
+                                                      ),
+                                                    ),
                                                   ),
-                                                ),
-                                              ),
-                                            );
-                                          }).toList());
-                                        })
-                                        .toList()
-                                        .reversed
-                                        .toList(),
-                                  ),
-                                ),
-                                Visibility(
-                                  visible: cubit.allGraphDataList.length > 60,
-                                  child: Padding(
-                                    padding: const EdgeInsets.all(8.0),
-                                    child: Text(
-                                      "Download the file to see all data",
-                                      style: TextStyle(
-                                        color: customGreen,
-                                        fontWeight: FontWeight.bold,
-                                        fontSize: 20,
+                                                );
+                                              }).toList());
+                                            })
+                                            .toList()
+                                            .reversed
+                                            .toList(),
                                       ),
                                     ),
-                                  ),
-                                )
-                              ],
-                            ),
-                          )),
+                                    Visibility(
+                                      visible:
+                                          cubit.allGraphDataList.length > 60,
+                                      child: Padding(
+                                        padding: const EdgeInsets.all(8.0),
+                                        child: Text(
+                                          "Download the file to see all data",
+                                          style: TextStyle(
+                                            color: customGreen,
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 20,
+                                          ),
+                                        ),
+                                      ),
+                                    )
+                                  ],
+                                ),
+                              )),
+                        ),
                 ),
         );
       },
     );
-  }
-
-  Widget readingBuilder(AppCubit cubit, int index, context) {
-    return index == -1
-        ? Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Expanded(
-                flex: 1,
-                child: Center(
-                  child: Text(
-                    'Date',
-                    style: TextStyle(
-                      color: Colors.blueGrey,
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                    ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ),
-              ),
-              Container(
-                height: 20.0,
-                width: 1.0,
-                color: Colors.grey,
-                margin: const EdgeInsets.only(
-                  left: 10.0,
-                ),
-              ),
-              Expanded(
-                child: Center(
-                  child: Text(
-                    'Time',
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: TextStyle(
-                      color: Colors.blueGrey,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 20,
-                    ),
-                  ),
-                ),
-              ),
-              Container(
-                height: 20.0,
-                width: 1.0,
-                color: Colors.grey,
-                margin: const EdgeInsets.only(left: 10.0, right: 10.0),
-              ),
-              Expanded(
-                child: Center(
-                  child: Text(
-                    'Reading',
-                    style: TextStyle(
-                      color: Colors.blueGrey,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 20,
-                    ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ),
-              )
-            ],
-          )
-        : Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Expanded(
-                flex: 1,
-                child: Center(
-                  child: Text(
-                    "11/20/30",
-                    overflow: TextOverflow.ellipsis,
-                    style: TextStyle(
-                      fontSize: 15,
-                    ),
-                    maxLines: 1,
-                  ),
-                ),
-              ),
-              Container(
-                height: 20.0,
-                width: 1.0,
-                color: Colors.grey,
-                margin: const EdgeInsets.only(
-                  left: 10.0,
-                ),
-              ),
-              Expanded(
-                child: Center(
-                  child: Text(
-                    "11:20",
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: TextStyle(
-                      fontSize: 15,
-                    ),
-                  ),
-                ),
-              ),
-              Container(
-                height: 20.0,
-                width: 1.0,
-                color: Colors.grey,
-                margin: const EdgeInsets.only(left: 10.0, right: 10.0),
-              ),
-              Expanded(
-                child: Center(
-                  child: Text(
-                    '120',
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: TextStyle(
-                      fontSize: 15,
-                    ),
-                  ),
-                ),
-              )
-            ],
-          );
   }
 
   Widget dummyListViewCell(int index) {

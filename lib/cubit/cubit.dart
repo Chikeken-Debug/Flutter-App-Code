@@ -9,6 +9,7 @@ import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:csv/csv.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -182,7 +183,14 @@ class AppCubit extends Cubit<AppStates> {
     });
   }
 
-  void valuesToDefault() {
+  Future<void> valuesToDefault() async {
+    await FirebaseMessaging.instance
+        .unsubscribeFromTopic(uId)
+        .catchError((err) {
+      print(err);
+      errorToast("Error at change account");
+    });
+
     listener.cancel();
     listener = null;
     espTime = "";
@@ -263,7 +271,6 @@ class AppCubit extends Cubit<AppStates> {
       errorToast("Error happened Please Try again");
       print(e);
     }).then((value) {
-      print(value);
       if (value.contains("has not a previous Data")) {
         infoToast("no data yet");
         return;
@@ -275,10 +282,16 @@ class AppCubit extends Cubit<AppStates> {
       allGraphData = value;
       allGraphDataList = CsvToListConverter(eol: '\n').convert(allGraphData);
       if (numberOfRows > 60) {
-        allGraphDataList = allGraphDataList.sublist(0, 60);
+        List title = allGraphDataList[0];
+        print(title);
+        allGraphDataList =
+            allGraphDataList.sublist(numberOfRows - 60, numberOfRows);
+        allGraphDataList.add(title);
+      } else {
+        allGraphDataList.add(allGraphDataList[0]);
+        allGraphDataList.removeAt(0);
       }
-      allGraphDataList.add(allGraphDataList[0]);
-      allGraphDataList.removeAt(0);
+
       emit(GetAllGraphDataDone());
       return;
     });
@@ -354,9 +367,13 @@ class AppCubit extends Cubit<AppStates> {
     return imageUrl;
   }
 
-  void virtualLogOutThenIn(BuildContext context, String nextId) {
+  Future<void> virtualLogOutThenIn(BuildContext context, String nextId) async {
     valuesToDefault();
     uId = nextId;
+    await FirebaseMessaging.instance.subscribeToTopic(uId).catchError((err) {
+      print(err);
+      errorToast("Error at logout");
+    });
     readFireDataOnce();
     readFireDataListener();
     currentPage = 0;
@@ -366,7 +383,7 @@ class AppCubit extends Cubit<AppStates> {
   void logOut(BuildContext context) async {
     final prefs = await SharedPreferences.getInstance();
     valuesToDefault();
-    prefs.setBool('rememberMe', false);
+    prefs.clear();
     navigateAndReplace(context, LoginPage());
   }
 
@@ -480,7 +497,6 @@ class AppCubit extends Cubit<AppStates> {
   }
 
   void readFireDataListener() {
-    print("firestore listner");
     print(uId);
     listener = dataBase.child(uId).onChildChanged.listen((event) {
       switch (event.snapshot.key) {
@@ -541,7 +557,6 @@ class AppCubit extends Cubit<AppStates> {
             print("keep alive come mother fucker");
             lastKeepAliveValue = -1;
             isEspConnected = true;
-            print("esp connected ? ${isEspConnected}");
             checkKeepAlive(1);
             break;
           }
@@ -642,13 +657,15 @@ class AppCubit extends Cubit<AppStates> {
     /*
     * library to login "it take the email and password and return uid"
     * */
+
     emit(UserSignInLoading());
     FirebaseAuth.instance
         .signInWithEmailAndPassword(email: email, password: password)
-        .then((value) {
+        .then((value) async {
       uId = value.user!.uid + '_1';
       readFireDataOnce();
       readFireDataListener();
+      await FirebaseMessaging.instance.subscribeToTopic(uId);
       if (value.user!.emailVerified) {
         saveData(uId);
         currentPage = 0;
@@ -833,7 +850,7 @@ class AppCubit extends Cubit<AppStates> {
         errorToast("an error happened");
       });
     } else {
-      errorToast("device is manual");
+      errorToast("device is Automatic");
     }
   }
 

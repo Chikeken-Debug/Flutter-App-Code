@@ -45,7 +45,6 @@ class ChartScreen extends StatelessWidget {
                 ? Center(child: CircularProgressIndicator())
                 : SmartRefresher(
                     enablePullUp: false,
-                    header: WaterDropHeader(),
                     controller: _refreshController,
                     onRefresh: () async {
                       cubit.readDataForGraph(20).then((value) {

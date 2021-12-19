@@ -46,8 +46,6 @@ class FireNotificationHelper {
   Future<void> redirectPage(Map<String, dynamic> data) async {
     Vibrate.feedback(FeedbackType.heavy);
     infoToast("Notification come");
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    prefs.setString("notificationInfo", data.toString());
     navigateAndPush(
         navigatorKey.currentState!.context, NotificationPage(data, false));
     print(data);
@@ -62,6 +60,7 @@ class FireNotificationHelper {
 Future<void> _firebaseMessagingBackgroundCloseHandler(
     RemoteMessage message) async {
   SharedPreferences prefs = await SharedPreferences.getInstance();
+  print(message.data);
   prefs.setString("notificationInfo", json.encode(message.data));
   print("on off state");
 }

@@ -26,6 +26,8 @@ Future<void> main() async {
   bool? rememberMe = prefs.getBool("rememberMe");
 
   String? notificationData = prefs.getString("notificationInfo");
+  print("notificationData");
+  print(notificationData);
 
   SystemChrome.setSystemUIOverlayStyle(SystemUiOverlayStyle(
     statusBarColor: customGreen, // status bar color
@@ -45,16 +47,17 @@ class MyApp extends StatelessWidget {
       create: (BuildContext context) =>
           AppCubit()..getUserLoginData(rememberMe),
       child: MaterialApp(
+        navigatorKey: navigatorKey,
         title: 'Bird APP',
         debugShowCheckedModeBanner: false,
         theme: ThemeData(
           primarySwatch: Colors.lightGreen,
         ),
         home: rememberMe ?? false
-            ? MainScreen()
-            : notificationData != null
+            ? notificationData != null
                 ? NotificationPage(notificationData, true)
-                : LoginPage(),
+                : MainScreen()
+            : LoginPage(),
       ),
     );
   }

@@ -61,9 +61,9 @@ class NotificationPage extends StatelessWidget {
                   },
                   icon: const Icon(Icons.arrow_back),
                 ),
-                title: const Text("Update Available"),
+                title: Text(data['Title'] ?? "Notification"),
               ),
-              body: Text("notification Come")),
+              body: Text(data['Body'] ?? "see the dashboard")),
         );
       },
     );

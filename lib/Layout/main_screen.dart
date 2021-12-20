@@ -38,8 +38,6 @@ class MainScreen extends StatelessWidget {
         notificationData = json.decode(notificationRowData);
       } catch (err) {
         notificationData = null;
-        print("error happened");
-        print(err);
       }
       SharedPreferences.getInstance().then((prefs) {
         prefs.remove("notificationInfo");

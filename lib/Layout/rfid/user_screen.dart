@@ -75,7 +75,6 @@ class UserScreen extends StatelessWidget {
               enablePullUp: false,
               controller: _refreshController,
               onRefresh: () async {
-                print("reload");
                 cubit.activeUser = -1;
                 cubit.getEmployeeData(userIndex, context, edit: true);
                 Future.delayed(Duration(milliseconds: 2000)).then((value) {

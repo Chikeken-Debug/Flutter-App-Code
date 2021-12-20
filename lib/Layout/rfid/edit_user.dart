@@ -119,7 +119,6 @@ class EditUserScreen extends StatelessWidget {
                       onSuggestionSelected: (suggestion) {
                         int userIndex = cubit.employeesNamesList
                             .indexOf(suggestion.toString());
-                        print(userIndex + 1);
                         dataHere = true;
                         hereBefore = true;
                         nameController.text = suggestion.toString();

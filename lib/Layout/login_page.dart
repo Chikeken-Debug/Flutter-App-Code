@@ -204,7 +204,6 @@ class LoginPage extends StatelessWidget {
                                           ),
                                         ),
                                         onPressed: () {
-                                          print("pressed");
                                           displayTextInputDialog(
                                               context, cubit);
                                         }),

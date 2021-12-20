@@ -10,24 +10,18 @@ import 'package:shared_preferences/shared_preferences.dart';
 GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
 class FireNotificationHelper {
+  String? token;
   FireNotificationHelper() {
     getToken();
-
-    print("Firebase messaging initialize");
-
     // app opened now
     FirebaseMessaging.onMessage
         .listen(_firebaseMessagingForegroundHandler)
-        .onError((err) {
-      print("err");
-    });
+        .onError((err) {});
 
     // app on back ground
     FirebaseMessaging.onMessageOpenedApp
         .listen(_firebaseMessagingBackgroundHandler)
-        .onError((err) {
-      print("err");
-    });
+        .onError((err) {});
 
     FirebaseMessaging.onBackgroundMessage(
         _firebaseMessagingBackgroundCloseHandler);
@@ -35,7 +29,6 @@ class FireNotificationHelper {
 
   Future<void> _firebaseMessagingForegroundHandler(
       RemoteMessage message) async {
-    print(message.sentTime);
     redirectPage(message.data);
   }
 
@@ -66,15 +59,13 @@ class FireNotificationHelper {
   }
 
   void getToken() async {
-    String? token = await FirebaseMessaging.instance.getToken();
-    print("token : " + token!);
+    token = await FirebaseMessaging.instance.getToken();
+    // print("token : " + token!);
   }
 }
 
 Future<void> _firebaseMessagingBackgroundCloseHandler(
     RemoteMessage message) async {
   SharedPreferences prefs = await SharedPreferences.getInstance();
-  print(message.data);
   prefs.setString("notificationInfo", json.encode(message.data));
-  print("on off state");
 }

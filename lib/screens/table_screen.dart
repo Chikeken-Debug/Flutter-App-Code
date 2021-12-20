@@ -104,11 +104,9 @@ class TableScreen extends StatelessWidget {
                             _baseScaleFactor = ratio;
                           },
                           onScaleUpdate: (details) {
-                            print("scaling");
                             ratio = _baseScaleFactor * details.scale;
                           },
                           onScaleEnd: (details) {
-                            print("end");
                             cubit.emit(ChangeDeviceStatus());
                           },
                           child: SingleChildScrollView(

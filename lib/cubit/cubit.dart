@@ -90,11 +90,7 @@ class AppCubit extends Cubit<AppStates> {
     emit(SendToEditLoading());
     var url = Uri.parse(
         'https://script.google.com/macros/s/AKfycbxjeykhu5BpiraSKXN_ugb-oz6_3nSC51_Oc_-zMcNywjLttXFMXJ-S0Qb3en6Y7hRS/exec?uid=$uId&fun=add&cardid=${data['ID']}&persondata=$data&index=2');
-    print(
-        'https://script.google.com/macros/s/AKfycbxjeykhu5BpiraSKXN_ugb-oz6_3nSC51_Oc_-zMcNywjLttXFMXJ-S0Qb3en6Y7hRS/exec?uid=$uId&fun=add&cardid=${data['ID']}&persondata=$data&index=2');
     http.read(url).then((value) {
-      print(value);
-
       if (currentUserState == "notfound") {
         currentUserState = "new";
         currentUserName = data['Name'];
@@ -109,13 +105,10 @@ class AppCubit extends Cubit<AppStates> {
       Navigator.of(context)
         ..pop()
         ..pop();
-      // navigateAndReplace(context, MainScreen(null));
-
       emit(SendToEditDone());
     }).catchError((err) {
       emit(SendToEditError());
-      print(err);
-      errorToast('AN error HAPPENED');
+      errorToast('An error happened');
     });
   }
 
@@ -125,7 +118,6 @@ class AppCubit extends Cubit<AppStates> {
     activeUser = 0;
     var url = Uri.parse(
         'https://script.google.com/macros/s/AKfycbxjeykhu5BpiraSKXN_ugb-oz6_3nSC51_Oc_-zMcNywjLttXFMXJ-S0Qb3en6Y7hRS/exec?uid=$uId&fun=delete&cardid=18010102&persondata=zzzz&index=$userIndex');
-    print(url);
     http.read(url).then((value) {
       Navigator.of(context).pop();
       emit(DeleteEmployeeDone());
@@ -145,21 +137,17 @@ class AppCubit extends Cubit<AppStates> {
       activeUser = index;
       var url = Uri.parse(
           'https://script.google.com/macros/s/AKfycbxjeykhu5BpiraSKXN_ugb-oz6_3nSC51_Oc_-zMcNywjLttXFMXJ-S0Qb3en6Y7hRS/exec?uid=$uId&fun=getdata&cardid=18010102&persondata=zzzz&index=$index');
-      print(url);
       http.read(url).then((value) {
         value = '{"' + value + '"}';
         value = value.replaceAll(':,', ':NULL,');
         value = value.replaceAll(':', '":"');
         value = value.replaceAll(',', '","');
-        print(value);
         userData = json.decode(value);
-        print("$userData");
         if (!edit) {
           navigateAndPush(context, UserScreen(index));
         }
         emit(GetPersonDone());
       }).catchError((err) {
-        print(err);
         emit(GetPersonError());
       });
     }
@@ -190,7 +178,6 @@ class AppCubit extends Cubit<AppStates> {
     await FirebaseMessaging.instance
         .unsubscribeFromTopic(uId)
         .catchError((err) {
-      print(err);
       errorToast("Error at change account");
     });
 
@@ -217,12 +204,9 @@ class AppCubit extends Cubit<AppStates> {
     emit(GetAllGraphDataLoading());
     var url = Uri.parse(
         'https://script.google.com/macros/s/AKfycbwnPWp-hpkaF7RCMeWMBkYPxvx4_9z6Wlqz5soTzwsNukFcP3Qm6CWkUOBWDLOUderXjw/exec?datalength=$length&uid=$uId&alldatabool=0');
-    print(url);
     http.read(url).catchError((e) {
       errorToast("Error happened Please Try again");
-      print(e);
     }).then((value) {
-      print(value);
       if (value.contains("has not a previous Data")) {
         emit(GetAllGraphDataDone());
         numberOfGraphedData = -1;
@@ -272,7 +256,6 @@ class AppCubit extends Cubit<AppStates> {
         'https://script.google.com/macros/s/AKfycbwnPWp-hpkaF7RCMeWMBkYPxvx4_9z6Wlqz5soTzwsNukFcP3Qm6CWkUOBWDLOUderXjw/exec?datalength=10&uid=$uId&alldatabool=1');
     http.read(url).catchError((e) {
       errorToast("Error happened Please Try again");
-      print(e);
     }).then((value) {
       if (value.contains("has not a previous Data")) {
         infoToast("no data yet");
@@ -286,7 +269,6 @@ class AppCubit extends Cubit<AppStates> {
       allGraphDataList = CsvToListConverter(eol: '\n').convert(allGraphData);
       if (numberOfRows > 60) {
         List title = allGraphDataList[0];
-        print(title);
         allGraphDataList =
             allGraphDataList.sublist(numberOfRows - 60, numberOfRows);
         allGraphDataList.add(title);
@@ -340,7 +322,6 @@ class AppCubit extends Cubit<AppStates> {
       timerListener = true;
       isEspConnected = true;
       Timer.periodic(Duration(seconds: 20), (Timer t) {
-        print(uId);
         if (uId == "") {
           t.cancel();
           return;
@@ -348,12 +329,10 @@ class AppCubit extends Cubit<AppStates> {
         dataBase.child(uId).once().then((value) {
           int currentKeepAlive = value.value['keepAlive'];
           isEspConnected = (currentKeepAlive != lastKeepAliveValue);
-          print("esp connected $isEspConnected");
           lastKeepAliveValue = currentKeepAlive;
           emit(KeepAliveChecked());
           if (!isEspConnected) {
             timerListener = false;
-            print("listner value = $timerListener");
             t.cancel();
           }
         });
@@ -374,7 +353,6 @@ class AppCubit extends Cubit<AppStates> {
     valuesToDefault();
     uId = nextId;
     await FirebaseMessaging.instance.subscribeToTopic(uId).catchError((err) {
-      print(err);
       errorToast("Error at logout");
     });
     readFireDataOnce();
@@ -396,7 +374,6 @@ class AppCubit extends Cubit<AppStates> {
     emit(GetDataLoading());
     dataBase.child(uId).once().then((snap) {
       usersCount = snap.value['usersCount'];
-      print("here count $usersCount");
       lastKeepAliveValue = snap.value['keepAlive'];
       tempReading = objectsToList(snap.value['Temp'].values.toList(), 1);
 
@@ -447,7 +424,6 @@ class AppCubit extends Cubit<AppStates> {
     http.read(url).catchError((e) {
       errorToast(
           "Error happened ,make sure you connect to ESP wifi and try again");
-      print(e);
       emit(SendConfigError());
     }).then((value) {
       if (value.trim() != "Failed") {
@@ -500,7 +476,6 @@ class AppCubit extends Cubit<AppStates> {
   }
 
   void readFireDataListener() {
-    print(uId);
     listener = dataBase.child(uId).onChildChanged.listen((event) {
       switch (event.snapshot.key) {
         case 'Heaters':
@@ -557,7 +532,6 @@ class AppCubit extends Cubit<AppStates> {
           }
         case "keepAlive":
           {
-            print("keep alive come mother fucker");
             lastKeepAliveValue = -1;
             isEspConnected = true;
             checkKeepAlive(1);
@@ -589,7 +563,6 @@ class AppCubit extends Cubit<AppStates> {
             break;
           }
       }
-      print("keep alive come mother fucker 2");
       emit(GetDataDone());
     });
   }
@@ -836,7 +809,6 @@ class AppCubit extends Cubit<AppStates> {
           });
     }).catchError((err) {
       emit(UserSignUpError());
-      print(err);
       errorToast(err.toString().split(']')[1].trim());
     });
   }

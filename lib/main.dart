@@ -25,8 +25,6 @@ Future<void> main() async {
   bool? rememberMe = prefs.getBool("rememberMe");
 
   String? notificationData = prefs.getString("notificationInfo");
-  print("notificationData");
-  print(notificationData);
 
   SystemChrome.setSystemUIOverlayStyle(SystemUiOverlayStyle(
     statusBarColor: customGreen, // status bar color

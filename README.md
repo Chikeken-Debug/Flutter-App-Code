@@ -3,6 +3,5 @@
 ## The flutter code for the mobile application
 
 ### tasks
-- Air quality equation
-- Graph max
-- user date is missy
+- Air quality equation XX
+- Graph max ..??

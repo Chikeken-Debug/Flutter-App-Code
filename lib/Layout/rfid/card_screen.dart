@@ -32,7 +32,7 @@ class CardScreen extends StatelessWidget {
                 ),
               ),
               foregroundColor: Colors.white.withOpacity(0.7),
-              title: Text('Chicken debug'),
+              title: Text(''),
               leading: FittedBox(
                 fit: BoxFit.cover,
                 child: Padding(
@@ -450,7 +450,7 @@ class CardScreen extends StatelessWidget {
                     child: Padding(
                       padding: EdgeInsets.all(10),
                       child: Text(
-                        cubit.employeesNamesList[index],
+                        cubit.employeesNamesList[index].trim(),
                         style: TextStyle(
                             color: Colors.white,
                             fontSize: 20,

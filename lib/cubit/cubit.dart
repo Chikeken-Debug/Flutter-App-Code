@@ -200,6 +200,25 @@ class AppCubit extends Cubit<AppStates> {
     realNumberOfGraphedData = 0;
   }
 
+  void deleteDataSheet() {
+    emit(DeleteSheetLoading());
+
+    var url = Uri.parse("not yet");
+    http.read(url).then((value) {
+      print(value);
+      realNumberOfGraphedData = 0;
+      allGraphDataList = [
+        [
+          "Date",
+        ]
+      ];
+      emit(DeleteSheetDone());
+    }).catchError((err) {
+      print(err);
+      emit(DeleteSheetError());
+    });
+  }
+
   Future<void> readDataForGraph(int length) async {
     emit(GetAllGraphDataLoading());
     var url = Uri.parse(
@@ -254,9 +273,11 @@ class AppCubit extends Cubit<AppStates> {
     emit(GetAllGraphDataLoading());
     var url = Uri.parse(
         'https://script.google.com/macros/s/AKfycbwnPWp-hpkaF7RCMeWMBkYPxvx4_9z6Wlqz5soTzwsNukFcP3Qm6CWkUOBWDLOUderXjw/exec?datalength=10&uid=$uId&alldatabool=1');
+    print(url);
     http.read(url).catchError((e) {
       errorToast("Error happened Please Try again");
     }).then((value) {
+      print(value);
       if (value.contains("has not a previous Data")) {
         infoToast("no data yet");
         return;
@@ -270,7 +291,7 @@ class AppCubit extends Cubit<AppStates> {
       if (numberOfRows > 60) {
         List title = allGraphDataList[0];
         allGraphDataList =
-            allGraphDataList.sublist(numberOfRows - 60, numberOfRows);
+            allGraphDataList.sublist(numberOfRows - 60, numberOfRows + 1);
         allGraphDataList.add(title);
       } else {
         allGraphDataList.add(allGraphDataList[0]);

@@ -95,3 +95,10 @@ class GetEmployeeNamesDone extends AppStates {}
 class DeleteEmployeeLoading extends AppStates {}
 
 class DeleteEmployeeDone extends AppStates {}
+//// GetSheetData
+
+class DeleteSheetLoading extends AppStates {}
+
+class DeleteSheetError extends AppStates {}
+
+class DeleteSheetDone extends AppStates {}

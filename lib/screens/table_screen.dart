@@ -49,7 +49,23 @@ class TableScreen extends StatelessWidget {
                           cubit.toCsv();
                         },
                         icon: Icon(Icons.file_download)),
-              )
+              ),
+              state is DeleteSheetLoading
+                  ? Padding(
+                      padding: const EdgeInsets.all(8.0),
+                      child: CupertinoActivityIndicator(),
+                    )
+                  : IconButton(
+                      onPressed: () {
+                        customCupertinoDialog(context,
+                            title: "Warning",
+                            content:
+                                "Are you sure you want to delete The data ?",
+                            yesFunction: () {
+                          cubit.deleteDataSheet();
+                        });
+                      },
+                      icon: Icon(Icons.restore_from_trash_outlined))
             ],
           ),
           body: cubit.allGraphData.isEmpty

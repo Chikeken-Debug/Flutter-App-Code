@@ -32,7 +32,10 @@ class CardScreen extends StatelessWidget {
                 ),
               ),
               foregroundColor: Colors.white.withOpacity(0.7),
-              title: Text(''),
+              title: Text(
+                'FarmArt',
+                style: TextStyle(fontSize: 20),
+              ),
               leading: FittedBox(
                 fit: BoxFit.cover,
                 child: Padding(

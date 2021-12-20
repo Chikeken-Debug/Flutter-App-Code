@@ -35,7 +35,10 @@ class TableScreen extends StatelessWidget {
               ),
             ),
             foregroundColor: Colors.white.withOpacity(0.7),
-            title: Text('Chicken debug'),
+            title: Text(
+              'FarmArt',
+              style: TextStyle(fontSize: 20),
+            ),
             actions: [
               Padding(
                 padding: const EdgeInsets.all(2.0),

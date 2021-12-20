@@ -184,7 +184,7 @@ class AppCubit extends Cubit<AppStates> {
     listener.cancel();
     listener = null;
     espTime = "";
-    uId = "";
+    //uId = "";
     thereEmployee = true;
     employeesNamesList = [];
     mainDrawerValuesListBool = false;
@@ -203,9 +203,9 @@ class AppCubit extends Cubit<AppStates> {
   void deleteDataSheet() {
     emit(DeleteSheetLoading());
 
-    var url = Uri.parse("not yet");
+    var url = Uri.parse(
+        "https://script.google.com/macros/s/AKfycbwnPWp-hpkaF7RCMeWMBkYPxvx4_9z6Wlqz5soTzwsNukFcP3Qm6CWkUOBWDLOUderXjw/exec?datalength=0&uid=$uId&alldatabool=2");
     http.read(url).then((value) {
-      print(value);
       realNumberOfGraphedData = 0;
       allGraphDataList = [
         [
@@ -214,7 +214,6 @@ class AppCubit extends Cubit<AppStates> {
       ];
       emit(DeleteSheetDone());
     }).catchError((err) {
-      print(err);
       emit(DeleteSheetError());
     });
   }
@@ -223,9 +222,7 @@ class AppCubit extends Cubit<AppStates> {
     emit(GetAllGraphDataLoading());
     var url = Uri.parse(
         'https://script.google.com/macros/s/AKfycbwnPWp-hpkaF7RCMeWMBkYPxvx4_9z6Wlqz5soTzwsNukFcP3Qm6CWkUOBWDLOUderXjw/exec?datalength=$length&uid=$uId&alldatabool=0');
-    http.read(url).catchError((e) {
-      errorToast("Error happened Please Try again");
-    }).then((value) {
+    http.read(url).then((value) {
       if (value.contains("has not a previous Data")) {
         emit(GetAllGraphDataDone());
         numberOfGraphedData = -1;
@@ -266,6 +263,8 @@ class AppCubit extends Cubit<AppStates> {
       }
       emit(GetAllGraphDataDone());
       return;
+    }).catchError((e) {
+      errorToast("Error happened Please Try again");
     });
   }
 
@@ -273,11 +272,9 @@ class AppCubit extends Cubit<AppStates> {
     emit(GetAllGraphDataLoading());
     var url = Uri.parse(
         'https://script.google.com/macros/s/AKfycbwnPWp-hpkaF7RCMeWMBkYPxvx4_9z6Wlqz5soTzwsNukFcP3Qm6CWkUOBWDLOUderXjw/exec?datalength=10&uid=$uId&alldatabool=1');
-    print(url);
     http.read(url).catchError((e) {
       errorToast("Error happened Please Try again");
     }).then((value) {
-      print(value);
       if (value.contains("has not a previous Data")) {
         infoToast("no data yet");
         return;
@@ -379,7 +376,8 @@ class AppCubit extends Cubit<AppStates> {
     readFireDataOnce();
     readFireDataListener();
     currentPage = 0;
-    navigateAndReplace(context, MainScreen(null));
+    Navigator.of(context).pop();
+    // navigateAndReplace(context, MainScreen(null));
   }
 
   void logOut(BuildContext context) async {
@@ -409,11 +407,6 @@ class AppCubit extends Cubit<AppStates> {
       for (int i = 0; i < deviceName.length; i++) {
         ledGetState[i] = '${snap.value['Lights'][deviceName[i]]}' == '1';
       }
-      // deviceName = ['heaterAauto', 'heaterBAuto', 'FanAuto'];
-      // for (int i = 0; i < deviceName.length; i++) {
-      //   devicesAutoBoolList[i] =
-      //       '${snap.value['Heaters'][deviceName[i]]}' == '1';
-      // }
       deviceName = ['Get_ManualHA', 'Get_ManualHB', 'Get_ManualF'];
       for (int i = 0; i < deviceName.length; i++) {
         devicesBoolList[i] = '${snap.value['Heaters'][deviceName[i]]}' == '1';
@@ -435,7 +428,7 @@ class AppCubit extends Cubit<AppStates> {
       currentUserId = "${snap.value['RFID']['lastID'].split(',')[0]}";
       currentUserState = "${snap.value['RFID']['lastID'].split(',')[1]}";
       emit(GetDataDone());
-    });
+    }).catchError((err) {});
   }
 
   void sendToEsp(BuildContext context, String wifiName, String wifiPassword) {
@@ -611,9 +604,14 @@ class AppCubit extends Cubit<AppStates> {
       ratio = 2 * int.parse(maxTempController.text) -
           int.parse(minTempController.text);
     }
+
     List<double> newList = [];
     for (var i in oldList) {
-      newList.add(i.toDouble() / ratio);
+      try {
+        newList.add(i.toDouble() / ratio);
+      } catch (err) {
+        continue;
+      }
     }
     return newList;
   }

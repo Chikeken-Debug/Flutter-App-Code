@@ -41,7 +41,10 @@ class ConfigurationScreen extends StatelessWidget {
                 ),
               ),
               foregroundColor: Colors.white.withOpacity(0.7),
-              title: Text('Chicken debug'),
+              title: Text(
+                'FarmArt',
+                style: TextStyle(fontSize: 20),
+              ),
             ),
             body: Padding(
               padding:
@@ -76,14 +79,17 @@ class ConfigurationScreen extends StatelessWidget {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Padding(
-                              padding: const EdgeInsets.all(10.0),
-                              child: Text(
-                                'First Connect to wifi ESP with password <88888888>',
-                                style: TextStyle(
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 12,
-                                    color: Colors.deepOrange),
+                            Visibility(
+                              visible: !online,
+                              child: Padding(
+                                padding: const EdgeInsets.all(10.0),
+                                child: Text(
+                                  'First Connect to wifi ESP with password <88888888>',
+                                  style: TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 12,
+                                      color: Colors.deepOrange),
+                                ),
                               ),
                             ),
                             TextFormField(

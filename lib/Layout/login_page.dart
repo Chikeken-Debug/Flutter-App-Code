@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:bird_system/Layout/creat_account.dart';
 import 'package:bird_system/cubit/cubit.dart';
 import 'package:bird_system/cubit/states.dart';
@@ -45,20 +47,24 @@ class LoginPage extends StatelessWidget {
                             child: Row(
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 children: [
-                                  Text(
-                                    "Chicken debug",
-                                    style: TextStyle(
-                                      fontSize: 25,
-                                      color: customViolet,
-                                      fontWeight: FontWeight.bold,
+                                  Transform(
+                                    alignment: Alignment.center,
+                                    transform: Matrix4.rotationY(pi),
+                                    child: Image.asset(
+                                      "images/birdlogo.png",
+                                      width: 70,
                                     ),
                                   ),
                                   SizedBox(
                                     width: 5,
                                   ),
-                                  Image.asset(
-                                    "images/birdlogo.png",
-                                    width: 70,
+                                  Text(
+                                    "FarmArt",
+                                    style: TextStyle(
+                                      fontSize: 25,
+                                      color: customViolet,
+                                      fontWeight: FontWeight.bold,
+                                    ),
                                   ),
                                 ]),
                           ),

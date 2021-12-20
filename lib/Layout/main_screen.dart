@@ -111,10 +111,16 @@ class MainScreen extends StatelessWidget {
                               Padding(
                                 padding: const EdgeInsets.all(8.0),
                                 child: ExpansionPanelList(
-                                  expandedHeaderPadding: EdgeInsets.all(4),
+                                  expandedHeaderPadding: EdgeInsets.all(0),
                                   expansionCallback:
                                       (int index, bool isExpanded) {
-                                    cubit.mainDrawerFarmsListList();
+                                    if (index == 0) {
+                                      cubit.mainDrawerValuesListBool = false;
+                                      cubit.mainDrawerFarmsListList();
+                                    } else {
+                                      cubit.mainDrawerFarmsListBool = false;
+                                      cubit.mainDrawerValuesList();
+                                    }
                                   },
                                   children: <ExpansionPanel>[
                                     ExpansionPanel(
@@ -188,17 +194,6 @@ class MainScreen extends StatelessWidget {
                                       ),
                                       isExpanded: cubit.mainDrawerFarmsListBool,
                                     ),
-                                  ],
-                                ),
-                              ),
-                              Padding(
-                                padding: const EdgeInsets.all(8.0),
-                                child: ExpansionPanelList(
-                                  expansionCallback:
-                                      (int index, bool isExpanded) {
-                                    cubit.mainDrawerValuesList();
-                                  },
-                                  children: <ExpansionPanel>[
                                     ExpansionPanel(
                                       headerBuilder: (BuildContext context,
                                           bool isExpanded) {
@@ -544,7 +539,10 @@ class MainScreen extends StatelessWidget {
                     ),
                   ),
                   foregroundColor: Colors.white.withOpacity(0.7),
-                  title: Text('Chicken debug'),
+                  title: Text(
+                    'FarmArt',
+                    style: TextStyle(fontSize: 20),
+                  ),
                   actions: [
                     Padding(
                       padding: const EdgeInsets.all(2.0),
@@ -678,7 +676,10 @@ class MainScreen extends StatelessWidget {
                     ),
                   ),
                   foregroundColor: Colors.white.withOpacity(0.7),
-                  title: Text('Chicken debug'),
+                  title: Text(
+                    'FarmArt',
+                    style: TextStyle(fontSize: 20),
+                  ),
                   leading: FittedBox(
                     fit: BoxFit.cover,
                     child: Padding(

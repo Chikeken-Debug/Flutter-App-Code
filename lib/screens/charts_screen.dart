@@ -41,7 +41,7 @@ class ChartScreen extends StatelessWidget {
         return Stack(
           alignment: Alignment.bottomRight,
           children: [
-            cubit.numberOfGraphedData == 0
+            cubit.numberOfGraphedData == 0 && cubit.realNumberOfGraphedData != 0
                 ? Center(child: CircularProgressIndicator())
                 : SmartRefresher(
                     enablePullUp: false,

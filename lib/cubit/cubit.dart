@@ -52,8 +52,8 @@ class AppCubit extends Cubit<AppStates> {
   bool isEspConnected = false;
   List<double> tempReading = [];
   List<double> humReading = [];
-  double airQuality = 15;
-  String airQualityText = "good";
+  double airQuality = 0;
+  String airQualityText = "---";
   var maxTempController = TextEditingController();
   var minTempController = TextEditingController();
   var maxVentController = TextEditingController();
@@ -106,7 +106,10 @@ class AppCubit extends Cubit<AppStates> {
       currentPage = 0;
       employeesNamesList = [];
       thereEmployee = true;
-      navigateAndReplace(context, MainScreen(null));
+      Navigator.of(context)
+        ..pop()
+        ..pop();
+      // navigateAndReplace(context, MainScreen(null));
 
       emit(SendToEditDone());
     }).catchError((err) {
@@ -124,7 +127,7 @@ class AppCubit extends Cubit<AppStates> {
         'https://script.google.com/macros/s/AKfycbxjeykhu5BpiraSKXN_ugb-oz6_3nSC51_Oc_-zMcNywjLttXFMXJ-S0Qb3en6Y7hRS/exec?uid=$uId&fun=delete&cardid=18010102&persondata=zzzz&index=$userIndex');
     print(url);
     http.read(url).then((value) {
-      Navigator.pop(context);
+      Navigator.of(context).pop();
       emit(DeleteEmployeeDone());
     });
   }
@@ -143,10 +146,7 @@ class AppCubit extends Cubit<AppStates> {
       var url = Uri.parse(
           'https://script.google.com/macros/s/AKfycbxjeykhu5BpiraSKXN_ugb-oz6_3nSC51_Oc_-zMcNywjLttXFMXJ-S0Qb3en6Y7hRS/exec?uid=$uId&fun=getdata&cardid=18010102&persondata=zzzz&index=$index');
       print(url);
-      http.read(url).catchError((err) {
-        print(err);
-        emit(GetPersonError());
-      }).then((value) {
+      http.read(url).then((value) {
         value = '{"' + value + '"}';
         value = value.replaceAll(':,', ':NULL,');
         value = value.replaceAll(':', '":"');
@@ -158,6 +158,9 @@ class AppCubit extends Cubit<AppStates> {
           navigateAndPush(context, UserScreen(index));
         }
         emit(GetPersonDone());
+      }).catchError((err) {
+        print(err);
+        emit(GetPersonError());
       });
     }
   }

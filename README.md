@@ -5,6 +5,4 @@
 ### tasks
 - Air quality equation
 - Graph max
-- Close the deleted user
-- RTL absent Date 
-- Get user info when refresh
+- user date is missy

@@ -87,10 +87,14 @@ class EditUserScreen extends StatelessWidget {
                     Map data = {
                       'Name': nameController.text,
                       'ID': id,
-                      'Phone': phoneController.text,
-                      'PersonRole': roleController.text,
+                      'Phone': phoneController.text.isEmpty
+                          ? "empty"
+                          : phoneController.text,
+                      'PersonRole': roleController.text.isEmpty
+                          ? "empty"
+                          : roleController.text,
                       'ImageLink': photoController.text.isEmpty
-                          ? "null"
+                          ? "empty"
                           : photoController.text.replaceAll("https://", "")
                     };
                     cubit.editEmployee(data, context);

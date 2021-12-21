@@ -425,7 +425,7 @@ class AppCubit extends Cubit<AppStates> {
       currentUserState = "${snap.value['RFID']['lastID'].split(',')[1]}";
       emit(GetDataDone());
     }).catchError((err) {
-      print(err);
+      //print(err);
     });
   }
 

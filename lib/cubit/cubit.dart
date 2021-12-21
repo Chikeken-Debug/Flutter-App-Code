@@ -424,6 +424,8 @@ class AppCubit extends Cubit<AppStates> {
       currentUserId = "${snap.value['RFID']['lastID'].split(',')[0]}";
       currentUserState = "${snap.value['RFID']['lastID'].split(',')[1]}";
       emit(GetDataDone());
+    }).catchError((err) {
+      print(err);
     });
   }
 
@@ -486,10 +488,7 @@ class AppCubit extends Cubit<AppStates> {
   }
 
   void readFireDataListener() {
-    print("sartrt listen");
     listener = dataBase.child(uId).onChildChanged.listen((event) {
-      print("sartrt listen $uId");
-
       switch (event.snapshot.key) {
         case 'Heaters':
           {

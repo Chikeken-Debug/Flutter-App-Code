@@ -395,16 +395,16 @@ class DashBoardScreen extends StatelessWidget {
                                   ),
                                   Expanded(
                                     child: SfLinearGauge(
-                                      showLabels: false,
-                                      showAxisTrack: false,
-                                      maximum: 150,
+                                      showLabels: true,
+                                      showAxisTrack: true,
+                                      maximum: 500,
                                       ranges: const [
                                         LinearGaugeRange(
                                             startWidth: 25,
                                             endWidth: 25,
                                             child: Center(child: Text('ok')),
                                             startValue: 0,
-                                            endValue: 20,
+                                            endValue: 100,
                                             position:
                                                 LinearElementPosition.outside,
                                             color: Color(0xff0DC9AB)),
@@ -412,9 +412,9 @@ class DashBoardScreen extends StatelessWidget {
                                             startWidth: 25,
                                             endWidth: 25,
                                             child:
-                                                Center(child: Text('meduim')),
-                                            startValue: 20,
-                                            endValue: 50,
+                                                Center(child: Text('medium')),
+                                            startValue: 100,
+                                            endValue: 200,
                                             position:
                                                 LinearElementPosition.outside,
                                             color: Color(0xffFFC93E)),
@@ -422,8 +422,8 @@ class DashBoardScreen extends StatelessWidget {
                                             startWidth: 25,
                                             endWidth: 25,
                                             child: Center(child: Text('bad')),
-                                            startValue: 50,
-                                            endValue: 100,
+                                            startValue: 200,
+                                            endValue: 300,
                                             position:
                                                 LinearElementPosition.outside,
                                             color: Colors.orange),
@@ -432,8 +432,8 @@ class DashBoardScreen extends StatelessWidget {
                                             endWidth: 25,
                                             child:
                                                 Center(child: Text('danger')),
-                                            startValue: 100,
-                                            endValue: 150,
+                                            startValue: 300,
+                                            endValue: 500,
                                             position:
                                                 LinearElementPosition.outside,
                                             color: Color(0xffF45656)),
@@ -454,7 +454,7 @@ class DashBoardScreen extends StatelessWidget {
                                       child: Text(
                                         "The Air is ${cubit.airQualityText} with ${cubit.airQuality.round()} ppm",
                                         style: TextStyle(
-                                            fontSize: 20,
+                                            fontSize: 18,
                                             fontWeight: FontWeight.bold),
                                       ),
                                     ),

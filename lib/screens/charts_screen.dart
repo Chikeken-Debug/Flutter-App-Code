@@ -392,12 +392,12 @@ class ChartScreen extends StatelessWidget {
                                             labelX: List<String>.filled(
                                                 cubit.numberOfGraphedData, ''),
                                             labelY: const [
-                                              '25',
-                                              '50',
-                                              '75',
                                               '100',
-                                              '125',
-                                              '150'
+                                              '200',
+                                              '300',
+                                              '400',
+                                              '500',
+                                              '600'
                                             ],
                                             showDescription: false,
                                             graphColor: Colors.black,

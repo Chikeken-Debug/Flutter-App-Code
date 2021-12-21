@@ -200,40 +200,36 @@ class CardScreen extends StatelessWidget {
                                                       BorderRadius.circular(8),
                                                   color: customGreen,
                                                 ),
-                                                child: Padding(
-                                                  padding:
-                                                      const EdgeInsets.all(5.0),
-                                                  child: ClipRRect(
-                                                      borderRadius:
-                                                          BorderRadius.circular(
+                                                child: ClipRRect(
+                                                    borderRadius:
+                                                        BorderRadius.circular(
+                                                            8.0),
+                                                    child: Padding(
+                                                      padding:
+                                                          const EdgeInsets.all(
                                                               8.0),
-                                                      child: Padding(
-                                                        padding:
-                                                            const EdgeInsets
-                                                                .all(8.0),
-                                                        child: FadeInImage
-                                                            .assetNetwork(
-                                                          height: 120,
-                                                          placeholder:
-                                                              'images/vector.png',
-                                                          imageErrorBuilder: (
-                                                            context,
-                                                            error,
-                                                            stackTrace,
-                                                          ) {
-                                                            return SizedBox(
-                                                              height: 120,
-                                                              child: Center(
-                                                                child: Image.asset(
-                                                                    'images/vector.png'),
-                                                              ),
-                                                            );
-                                                          },
-                                                          image: cubit
-                                                              .currentUserImageUrl,
-                                                        ),
-                                                      )),
-                                                ),
+                                                      child: FadeInImage
+                                                          .assetNetwork(
+                                                        height: 120,
+                                                        placeholder:
+                                                            'images/vector.png',
+                                                        imageErrorBuilder: (
+                                                          context,
+                                                          error,
+                                                          stackTrace,
+                                                        ) {
+                                                          return SizedBox(
+                                                            height: 120,
+                                                            child: Center(
+                                                              child: Image.asset(
+                                                                  'images/vector.png'),
+                                                            ),
+                                                          );
+                                                        },
+                                                        image: cubit
+                                                            .currentUserImageUrl,
+                                                      ),
+                                                    )),
                                               ),
                                             ),
                                           )

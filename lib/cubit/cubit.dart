@@ -77,7 +77,7 @@ class AppCubit extends Cubit<AppStates> {
 
   // Graph List
   int numberOfGraphedData = 0;
-  int realNumberOfGraphedData = 0;
+  int realNumberOfGraphedData = -1;
   List<double> airQualityList = [];
   List<double> tempAvg = [];
   List<double> humAvg = [];
@@ -175,12 +175,6 @@ class AppCubit extends Cubit<AppStates> {
   }
 
   Future<void> valuesToDefault() async {
-    await FirebaseMessaging.instance
-        .unsubscribeFromTopic(uId)
-        .catchError((err) {
-      errorToast("Error at change account");
-    });
-
     listener.cancel();
     listener = null;
     espTime = "";
@@ -252,7 +246,7 @@ class AppCubit extends Cubit<AppStates> {
           tempAvg = objectsToList(list, ratio);
         } else if (list[0] == 'AirQuality') {
           list.removeAt(0);
-          airQualityList = objectsToList(list, 150);
+          airQualityList = objectsToList(list, 600);
         } else if (list[0].toString().contains('hum')) {
           list.removeAt(0);
           humGraph.add(list);
@@ -370,9 +364,6 @@ class AppCubit extends Cubit<AppStates> {
   Future<void> virtualLogOutThenIn(BuildContext context, String nextId) async {
     valuesToDefault();
     uId = nextId;
-    await FirebaseMessaging.instance.subscribeToTopic(uId).catchError((err) {
-      errorToast("Error at logout");
-    });
     readFireDataOnce();
     readFireDataListener();
     currentPage = 0;
@@ -382,6 +373,11 @@ class AppCubit extends Cubit<AppStates> {
 
   void logOut(BuildContext context) async {
     final prefs = await SharedPreferences.getInstance();
+    await FirebaseMessaging.instance
+        .unsubscribeFromTopic(uId.split("_")[0])
+        .catchError((err) {
+      errorToast("Error at change account");
+    });
     valuesToDefault();
     prefs.clear();
     navigateAndReplace(context, LoginPage());
@@ -428,7 +424,7 @@ class AppCubit extends Cubit<AppStates> {
       currentUserId = "${snap.value['RFID']['lastID'].split(',')[0]}";
       currentUserState = "${snap.value['RFID']['lastID'].split(',')[1]}";
       emit(GetDataDone());
-    }).catchError((err) {});
+    });
   }
 
   void sendToEsp(BuildContext context, String wifiName, String wifiPassword) {
@@ -490,7 +486,10 @@ class AppCubit extends Cubit<AppStates> {
   }
 
   void readFireDataListener() {
+    print("sartrt listen");
     listener = dataBase.child(uId).onChildChanged.listen((event) {
+      print("sartrt listen $uId");
+
       switch (event.snapshot.key) {
         case 'Heaters':
           {
@@ -583,14 +582,15 @@ class AppCubit extends Cubit<AppStates> {
 
   String airRatioToText(int ratio) {
     List<String> airText = [
-      'safe',
+      'fresh',
+      'Safe',
       'good',
       'medium',
       'danger',
       'danger+',
       'danger++'
     ];
-    List<int> ranges = [15, 25, 40, 60, 100, 200];
+    List<int> ranges = [40, 100, 150, 250, 300, 400, 500];
     for (int i = 0; i < ranges.length; i++) {
       if (ratio <= ranges[i]) {
         return airText[i];
@@ -660,7 +660,7 @@ class AppCubit extends Cubit<AppStates> {
       uId = value.user!.uid + '_1';
       readFireDataOnce();
       readFireDataListener();
-      await FirebaseMessaging.instance.subscribeToTopic(uId);
+      await FirebaseMessaging.instance.subscribeToTopic(uId.split("_")[0]);
       if (value.user!.emailVerified) {
         saveData(uId);
         currentPage = 0;

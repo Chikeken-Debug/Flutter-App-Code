@@ -579,6 +579,7 @@ class MainScreen extends StatelessWidget {
                   ),
                 ),
                 bottomNavigationBar: CurvedNavigationBar(
+                    index: cubit.currentPage,
                     color: customGreen,
                     backgroundColor: Colors.white,
                     onTap: (index) {

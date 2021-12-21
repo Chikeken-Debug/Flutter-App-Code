@@ -191,7 +191,7 @@ class AppCubit extends Cubit<AppStates> {
     activeUser = -1;
     userData = {};
     numberOfGraphedData = 0;
-    realNumberOfGraphedData = 0;
+    realNumberOfGraphedData = -1;
   }
 
   void deleteDataSheet() {

@@ -395,7 +395,7 @@ class DashBoardScreen extends StatelessWidget {
                                   ),
                                   Expanded(
                                     child: SfLinearGauge(
-                                      showLabels: true,
+                                      showLabels: false,
                                       showAxisTrack: true,
                                       maximum: 500,
                                       ranges: const [

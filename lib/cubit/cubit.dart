@@ -384,6 +384,7 @@ class AppCubit extends Cubit<AppStates> {
   }
 
   void readFireDataOnce() {
+    print(uId);
     tempReading = [];
     humReading = [];
     emit(GetDataLoading());

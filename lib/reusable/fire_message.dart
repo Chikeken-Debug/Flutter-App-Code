@@ -2,7 +2,6 @@ import 'dart:async';
 import 'dart:convert';
 import 'package:bird_system/reusable/reusable_functions.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_vibrate/flutter_vibrate.dart';
 import 'package:shared_preferences/shared_preferences.dart';

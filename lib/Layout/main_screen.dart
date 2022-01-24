@@ -11,12 +11,7 @@ import 'package:bird_system/screens/charts_screen.dart';
 import 'package:bird_system/screens/dashboard_screen.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:curved_navigation_bar/curved_navigation_bar.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/painting.dart';
-import 'package:flutter/rendering.dart';
-import 'package:flutter/services.dart';
-import 'package:flutter/widgets.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'dart:math' as math;
 
@@ -219,13 +214,6 @@ class MainScreen extends StatelessWidget {
                                                             keyboardType:
                                                                 TextInputType
                                                                     .number,
-                                                            inputFormatters: <
-                                                                TextInputFormatter>[
-                                                              // ignore: deprecated_member_use
-                                                              WhitelistingTextInputFormatter
-                                                                  // ignore: deprecated_member_use
-                                                                  .digitsOnly
-                                                            ],
                                                             validator: (value) {
                                                               if (value!
                                                                   .isEmpty) {
@@ -250,13 +238,6 @@ class MainScreen extends StatelessWidget {
                                                             keyboardType:
                                                                 TextInputType
                                                                     .number,
-                                                            inputFormatters: <
-                                                                TextInputFormatter>[
-                                                              // ignore: deprecated_member_use
-                                                              WhitelistingTextInputFormatter
-                                                                  // ignore: deprecated_member_use
-                                                                  .digitsOnly
-                                                            ],
                                                             validator: (value) {
                                                               if (value!
                                                                   .isEmpty) {
@@ -282,13 +263,6 @@ class MainScreen extends StatelessWidget {
                                                             keyboardType:
                                                                 TextInputType
                                                                     .number,
-                                                            inputFormatters: <
-                                                                TextInputFormatter>[
-                                                              // ignore: deprecated_member_use
-                                                              WhitelistingTextInputFormatter
-                                                                  // ignore: deprecated_member_use
-                                                                  .digitsOnly
-                                                            ],
                                                             validator: (value) {
                                                               if (value!
                                                                   .isEmpty) {
@@ -313,13 +287,6 @@ class MainScreen extends StatelessWidget {
                                                             keyboardType:
                                                                 TextInputType
                                                                     .number,
-                                                            inputFormatters: <
-                                                                TextInputFormatter>[
-                                                              // ignore: deprecated_member_use
-                                                              WhitelistingTextInputFormatter
-                                                                  // ignore: deprecated_member_use
-                                                                  .digitsOnly
-                                                            ],
                                                             validator: (value) {
                                                               if (value!
                                                                   .isEmpty) {
@@ -345,13 +312,6 @@ class MainScreen extends StatelessWidget {
                                                             keyboardType:
                                                                 TextInputType
                                                                     .number,
-                                                            inputFormatters: <
-                                                                TextInputFormatter>[
-                                                              // ignore: deprecated_member_use
-                                                              WhitelistingTextInputFormatter
-                                                                  // ignore: deprecated_member_use
-                                                                  .digitsOnly
-                                                            ],
                                                             validator: (value) {
                                                               if (value!
                                                                   .isEmpty) {
@@ -378,13 +338,6 @@ class MainScreen extends StatelessWidget {
                                                             keyboardType:
                                                                 TextInputType
                                                                     .number,
-                                                            inputFormatters: <
-                                                                TextInputFormatter>[
-                                                              // ignore: deprecated_member_use
-                                                              WhitelistingTextInputFormatter
-                                                                  // ignore: deprecated_member_use
-                                                                  .digitsOnly
-                                                            ],
                                                             validator: (value) {
                                                               if (value!
                                                                   .isEmpty) {

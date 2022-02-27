@@ -402,11 +402,11 @@ class AppCubit extends Cubit<AppStates> {
 
       List<String> deviceName = ['Get_Led1', 'Get_Light'];
       for (int i = 0; i < deviceName.length; i++) {
-        ledGetState[i] = '${snap.value['Lights'][deviceName[i]]}' == '1';
+        ledGetState[i] = '${snap.value['Lights'][deviceName[i]]}' == 'ON';
       }
       deviceName = ['Get_ManualHA', 'Get_ManualHB', 'Get_ManualF'];
       for (int i = 0; i < deviceName.length; i++) {
-        devicesBoolList[i] = '${snap.value['Heaters'][deviceName[i]]}' == '1';
+        devicesBoolList[i] = '${snap.value['Heaters'][deviceName[i]]}' == 'ON';
       }
       maxTempController.text =
           '${snap.value['valueRanges']['temp'].split(',')[1]}';
@@ -463,7 +463,7 @@ class AppCubit extends Cubit<AppStates> {
           .child(uId)
           .child("newConfig")
           .update({'pass': wifiName, 'ssid': wifiPassword});
-      dataBase.child(uId).update({'configFlag': '1'});
+      dataBase.child(uId).update({'configFlag': 'ON'});
       infoToast('ESP Configuration set');
       currentPage = 0;
       navigateAndReplace(context, MainScreen(null));
@@ -476,7 +476,7 @@ class AppCubit extends Cubit<AppStates> {
             .child(uId)
             .child("newConfig")
             .update({'pass': wifiName, 'ssid': wifiPassword, 'uId': nextUId});
-        dataBase.child(uId).update({'configFlag': 1});
+        dataBase.child(uId).update({'configFlag': "ON"});
         currentPage = 0;
         navigateAndReplace(context, MainScreen(null));
         infoToast('ESP Configuration set');
@@ -499,7 +499,7 @@ class AppCubit extends Cubit<AppStates> {
               'Get_ManualF'
             ];
             for (int i = 0; i < deviceName.length; i++) {
-              bool temp = '${event.snapshot.value[deviceName[i]]}' == '1';
+              bool temp = '${event.snapshot.value[deviceName[i]]}' == 'ON';
               if (devicesBoolList[i] != temp) {
                 devicesBoolList[i] = temp;
                 devicesLoadBoolList[i] = false;
@@ -522,7 +522,7 @@ class AppCubit extends Cubit<AppStates> {
           {
             List<String> deviceName = ['Get_Led1', 'Get_Light'];
             for (int i = 0; i < deviceName.length; i++) {
-              bool temp = '${event.snapshot.value[deviceName[i]]}' == '1';
+              bool temp = '${event.snapshot.value[deviceName[i]]}' == 'ON';
               if (ledGetState[i] != temp) {
                 ledGetState[i] = temp;
                 ledLoadSetState[i] = false;
@@ -735,17 +735,17 @@ class AppCubit extends Cubit<AppStates> {
     "CodeVersion" : "1.0.2.1",
     "Heaters" : {
       "Cooler_status" : 0,
-      "FanAuto" : "0",
-      "Get_ManualF" : 0,
-      "Get_ManualHA" : 0,
-      "Get_ManualHB" : 0,
-      "Set_ManualF" : "0",
-      "Set_ManualHA" : "0",
-      "Set_ManualHB" : "0",
-      "WhichHeater" : "0",
-      "heaterA_status" : 0,
-      "heaterAauto" : "0",
-      "heaterBAuto" : "0",
+      "FanAuto" : "OFF",
+      "Get_ManualF" : "OFF",
+      "Get_ManualHA" : "OFF",
+      "Get_ManualHB" : "OFF",
+      "Set_ManualF" : "OFF",
+      "Set_ManualHA" : "OFF",
+      "Set_ManualHB" : "OFF",
+      "WhichHeater" : "OFF",
+      "heaterA_status" : "OFF",
+      "heaterAauto" : "OFF",
+      "heaterBAuto" : "OFF",
       "heaterB_status" : 0,
       "startTime" : {
         "A" : "FF",
@@ -757,10 +757,10 @@ class AppCubit extends Cubit<AppStates> {
     "hum1" : 0
     },
     "Lights" : {
-      "Get_Led1" : 0,
-      "Get_Light" : 0,
-      "Set_Led1" : "0",
-      "Set_Light" : "0"
+      "Get_Led1" : "OFF",
+      "Get_Light" : "OFF",
+      "Set_Led1" : "OFF",
+      "Set_Light" : "OFF"
     },
     "RFID" : {
       "data" : ",",
@@ -782,7 +782,7 @@ class AppCubit extends Cubit<AppStates> {
       "ssid" : "menam",
       "uId" : "$newId"
     },
-    "resetFlag" : "0",
+    "resetFlag" : "ON",
     "usersCount" : $userCount,
     "valueRanges" : {
       "delay" : "0",
@@ -837,7 +837,7 @@ class AppCubit extends Cubit<AppStates> {
       List<String> deviceName = ['Set_ManualHA', 'Set_ManualHB', 'Set_ManualF'];
       devicesLoadBoolList[device] = true;
       dataBase.child(uId).child('Heaters').update({
-        deviceName[device]: !devicesBoolList[device] ? "1" : "0"
+        deviceName[device]: !devicesBoolList[device] ? "ON" : "OFF"
       }).then((value) {
         emit(ChangeDeviceStatus());
       }).catchError((err) {
@@ -853,7 +853,7 @@ class AppCubit extends Cubit<AppStates> {
 
     devicesAutoBoolList[index] = !devicesAutoBoolList[index];
     dataBase.child(uId).child('Heaters').update({
-      deviceName[index]: devicesAutoBoolList[index] ? "1" : "0"
+      deviceName[index]: devicesAutoBoolList[index] ? "ON" : "OFF"
     }).then((value) {
       emit(ChangeDeviceStatus());
     }).catchError((err) {
@@ -866,7 +866,7 @@ class AppCubit extends Cubit<AppStates> {
 
     ledLoadSetState[index] = true;
     dataBase.child(uId).child('Lights').update(
-        {deviceName[index]: !ledGetState[index] ? '1' : '0'}).then((value) {
+        {deviceName[index]: !ledGetState[index] ? 'ON' : 'OFF'}).then((value) {
       emit(ChangeDeviceStatus());
     }).catchError((err) {
       errorToast("an error happened");
@@ -888,7 +888,7 @@ class AppCubit extends Cubit<AppStates> {
   }
 
   void sendResetEsp() {
-    dataBase.child(uId).update({'resetFlag': "1"}).then((value) {
+    dataBase.child(uId).update({'resetFlag': "ON"}).then((value) {
       infoToast('ESP reset successfully');
       emit(SendDataToFireState());
     }).catchError((err) {

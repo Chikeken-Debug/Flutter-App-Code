@@ -376,7 +376,7 @@ class MainScreen extends StatelessWidget {
                                                                   .white)),
                                                       style: ElevatedButton
                                                           .styleFrom(
-                                                        primary: customViolet,
+                                                        backgroundColor: customViolet,
                                                         padding:
                                                             EdgeInsets.all(15),
                                                         shape:

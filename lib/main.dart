@@ -30,14 +30,16 @@ Future<void> main() async {
     statusBarColor: customGreen, // status bar color
   ));
 
-  runApp(MyApp(rememberMe, notificationData));
+  runApp(MyApp(rememberMe ?? false, notificationData));
 }
 
-// ignore: must_be_immutable
 class MyApp extends StatelessWidget {
-  bool? rememberMe;
-  String? notificationData;
-  MyApp(this.rememberMe, this.notificationData, {Key? key}) : super(key: key);
+  const MyApp(this.rememberMe, this.notificationData, {Key? key})
+      : super(key: key);
+
+  final bool rememberMe;
+  final String? notificationData;
+
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
@@ -50,7 +52,7 @@ class MyApp extends StatelessWidget {
         theme: ThemeData(
           primarySwatch: Colors.lightGreen,
         ),
-        home: rememberMe ?? false ? MainScreen(notificationData) : LoginPage(),
+        home: rememberMe ? MainScreen(notificationData) : LoginPage(),
       ),
     );
   }

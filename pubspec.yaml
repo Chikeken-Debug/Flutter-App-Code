@@ -46,13 +46,13 @@ dependencies:
   fluttertoast: ^8.0.8
   flutter_native_splash: ^1.2.4
   curved_navigation_bar: ^1.0.1
-  syncfusion_flutter_gauges: ^19.3.45
+  syncfusion_flutter_gauges: ^20.1.57
   flutter_switch: ^0.3.2
   connectivity_plus: ^2.0.2
   draw_graph: ^1.0.0
   http: ^0.13.3
   shimmer: ^2.0.0
-  flutter_typeahead: ^3.2.1
+  flutter_typeahead: ^4.0.0
   path_provider: ^2.0.3
   permission_handler: ^8.2.4
   csv: ^5.0.0

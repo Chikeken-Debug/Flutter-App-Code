@@ -269,7 +269,6 @@ class ConfigurationScreen extends StatelessWidget {
                                               fontSize: 18.0,
                                               color: Colors.white)),
                                       style: ElevatedButton.styleFrom(
-                                        primary: customGreen,
                                         padding: EdgeInsets.all(15),
                                         shape: RoundedRectangleBorder(
                                           borderRadius: BorderRadius.circular(

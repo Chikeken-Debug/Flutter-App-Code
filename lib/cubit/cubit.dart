@@ -84,96 +84,348 @@ class AppCubit extends Cubit<AppStates> {
   List<List> tempGraph = [];
   List<List> humGraph = [];
 
-  void editEmployee(Map data, BuildContext context) {
-    activeUser = -1;
-
-    emit(SendToEditLoading());
-    var url = Uri.parse(
-        'https://script.google.com/macros/s/AKfycbxjeykhu5BpiraSKXN_ugb-oz6_3nSC51_Oc_-zMcNywjLttXFMXJ-S0Qb3en6Y7hRS/exec?uid=$uId&fun=add&cardid=${data['ID']}&persondata=$data&index=2');
-    http.read(url).then((value) {
-      if (currentUserState == "notfound") {
-        currentUserState = "new";
-        currentUserName = data['Name'];
-        dataBase.child(uId).child('RFID').update({
-          "lastID": "$currentUserId,new",
-          "data": "${data['Name']},${data['ImageLink']}"
-        });
-      }
-      currentPage = 0;
-      employeesNamesList = [];
-      thereEmployee = true;
-      Navigator.of(context)
-        ..pop()
-        ..pop();
-      emit(SendToEditDone());
-    }).catchError((err) {
-      emit(SendToEditError());
-      errorToast('An error happened');
-    });
-  }
-
-  void deleteEmployee(int userIndex, BuildContext context) {
-    emit(DeleteEmployeeLoading());
-    employeesNamesList.removeAt(userIndex - 1);
-    activeUser = 0;
-    var url = Uri.parse(
-        'https://script.google.com/macros/s/AKfycbxjeykhu5BpiraSKXN_ugb-oz6_3nSC51_Oc_-zMcNywjLttXFMXJ-S0Qb3en6Y7hRS/exec?uid=$uId&fun=delete&cardid=18010102&persondata=zzzz&index=$userIndex');
-    http.read(url).then((value) {
-      Navigator.of(context).pop();
-      emit(DeleteEmployeeDone());
-    });
-  }
-
-  void getEmployeeData(int index, BuildContext context, {bool edit = false}) {
-    emit(GetPersonLoading());
-
-    if (index == activeUser && userData.isNotEmpty) {
-      emit(GetPersonDone());
-      if (!edit) {
-        navigateAndPush(context, UserScreen(index));
-        emit(GetPersonDone());
-      }
-    } else {
-      activeUser = index;
-      var url = Uri.parse(
-          'https://script.google.com/macros/s/AKfycbxjeykhu5BpiraSKXN_ugb-oz6_3nSC51_Oc_-zMcNywjLttXFMXJ-S0Qb3en6Y7hRS/exec?uid=$uId&fun=getdata&cardid=18010102&persondata=zzzz&index=$index');
-      http.read(url).then((value) {
-        value = '{"' + value + '"}';
-        value = value.replaceAll(':,', ':NULL,');
-        value = value.replaceAll(':', '":"');
-        value = value.replaceAll(',', '","');
-        userData = json.decode(value);
-        if (!edit) {
-          navigateAndPush(context, UserScreen(index));
+  void checkKeepAlive(int allState) async {
+    if (allState == 1 && timerListener == false) {
+      timerListener = true;
+      isEspConnected = true;
+      Timer.periodic(Duration(seconds: 20), (Timer t) {
+        if (uId == "") {
+          t.cancel();
+          return;
         }
-        emit(GetPersonDone());
-      }).catchError((err) {
-        emit(GetPersonError());
+        dataBase.child(uId).once().then((value) {
+          int currentKeepAlive = value.value['keepAlive'];
+          isEspConnected = (currentKeepAlive != lastKeepAliveValue);
+          lastKeepAliveValue = currentKeepAlive;
+          emit(KeepAliveChecked());
+          if (!isEspConnected) {
+            timerListener = false;
+            t.cancel();
+          }
+        });
       });
     }
   }
 
-  void getEmployeeNames() {
-    emit(GetEmployeeNamesLoading());
-    var url = Uri.parse(
-        'https://script.google.com/macros/s/AKfycbxjeykhu5BpiraSKXN_ugb-oz6_3nSC51_Oc_-zMcNywjLttXFMXJ-S0Qb3en6Y7hRS/exec?uid=$uId&fun=getnames&cardid=18010102&persondata=zzzz&index=2');
-    http.read(url).catchError((err) {
-      errorToast("An error happen");
-      emit(GetEmployeeNamesError());
-    }).then((value) {
-      employeesNamesList = [];
-      if (value.startsWith('[[')) {
-        value = value.replaceAll('[["', '');
-        value = value.replaceAll('"]]', '');
-        employeesNamesList = value.split('"],["');
+  /// data reading
+
+  void readFireDataOnce() {
+    // print("readFireDataOnce");
+    // print(uId);
+    tempReading = [];
+    humReading = [];
+    emit(GetDataLoading());
+    dataBase.child(uId).once().then((snap) {
+      // print(snap.value);
+      usersCount = snap.value['usersCount'];
+      lastKeepAliveValue = snap.value['keepAlive'];
+      tempReading = objectsToList(snap.value['Temp'].values.toList(), 1);
+
+      humReading = objectsToList(snap.value['Hum'].values.toList(), 1);
+      airQuality = snap.value['airQuality'].toDouble();
+      airQualityText = airRatioToText(airQuality.round());
+      Map tempEspTime = snap.value['Time'];
+      espTime =
+          "${tempEspTime['Hour']}:${tempEspTime['Minute']}:${tempEspTime['Seconds']}";
+
+      List<String> deviceName = ['Get_Led1', 'Get_Light'];
+      for (int i = 0; i < deviceName.length; i++) {
+        ledGetState[i] = '${snap.value['Lights'][deviceName[i]]}' == 'ON';
       }
-      if (employeesNamesList.isEmpty) {
-        thereEmployee = false;
+      deviceName = ['Get_ManualHA', 'Get_ManualHB', 'Get_ManualF'];
+      for (int i = 0; i < deviceName.length; i++) {
+        devicesBoolList[i] = '${snap.value['Heaters'][deviceName[i]]}' == 'ON';
       }
-      emit(GetEmployeeNamesDone());
+      maxTempController.text =
+          '${snap.value['valueRanges']['temp'].split(',')[1]}';
+      minTempController.text =
+          '${snap.value['valueRanges']['temp'].split(',')[0]}';
+      maxVentController.text =
+          '${snap.value['valueRanges']['vent'].split(',')[1]}';
+      minVentController.text =
+          '${snap.value['valueRanges']['vent'].split(',')[0]}';
+      delayController.text = "${snap.value['valueRanges']['delay']}";
+      historicalDelayController.text =
+          "${snap.value['valueRanges']['timeToWait']}";
+      currentUserName = snap.value['RFID']['data'].split(',')[0];
+      currentUserImageUrl =
+          driveToImage(snap.value['RFID']['data'].split(',')[1]);
+      currentUserId = "${snap.value['RFID']['lastID'].split(',')[0]}";
+      currentUserState = "${snap.value['RFID']['lastID'].split(',')[1]}";
+      emit(GetDataDone());
+    }).catchError((err, stack) {
+      // print(err);
+      // print(stack);
     });
   }
 
+  void readFireDataListener() {
+    listener = dataBase.child(uId).onChildChanged.listen((event) {
+      switch (event.snapshot.key) {
+        case 'Heaters':
+          {
+            List<String> deviceName = [
+              'Get_ManualHA',
+              'Get_ManualHB',
+              'Get_ManualF'
+            ];
+            for (int i = 0; i < deviceName.length; i++) {
+              bool temp = '${event.snapshot.value[deviceName[i]]}' == 'ON';
+              if (devicesBoolList[i] != temp) {
+                devicesBoolList[i] = temp;
+                devicesLoadBoolList[i] = false;
+              }
+            }
+            break;
+          }
+        case 'Hum':
+          {
+            humReading = objectsToList(event.snapshot.value.values.toList(), 1);
+            break;
+          }
+        case 'Temp':
+          {
+            tempReading =
+                objectsToList(event.snapshot.value.values.toList(), 1);
+            break;
+          }
+        case 'Lights':
+          {
+            List<String> deviceName = ['Get_Led1', 'Get_Light'];
+            for (int i = 0; i < deviceName.length; i++) {
+              bool temp = '${event.snapshot.value[deviceName[i]]}' == 'ON';
+              if (ledGetState[i] != temp) {
+                ledGetState[i] = temp;
+                ledLoadSetState[i] = false;
+              }
+            }
+            break;
+          }
+        case 'Time':
+          {
+            Map tempEspTime = event.snapshot.value;
+            espTime =
+                "${tempEspTime['Hour']}:${tempEspTime['Minute']}:${tempEspTime['Seconds']}";
+            break;
+          }
+        case "airQuality":
+          {
+            airQuality = event.snapshot.value.toDouble();
+            airQualityText = airRatioToText(airQuality.round());
+            break;
+          }
+        case "keepAlive":
+          {
+            lastKeepAliveValue = -1;
+            isEspConnected = true;
+            checkKeepAlive(1);
+            break;
+          }
+        case "RFID":
+          {
+            currentUserName = event.snapshot.value['data'].split(',')[0];
+            currentUserImageUrl =
+                driveToImage(event.snapshot.value['data'].split(',')[1]);
+            currentUserId = "${event.snapshot.value['lastID'].split(',')[0]}";
+            currentUserState =
+                "${event.snapshot.value['lastID'].split(',')[1]}";
+            break;
+          }
+        case "valueRanges":
+          {
+            maxTempController.text =
+                '${event.snapshot.value['temp'].split(',')[1]}';
+            minTempController.text =
+                '${event.snapshot.value['temp'].split(',')[0]}';
+            maxVentController.text =
+                '${event.snapshot.value['vent'].split(',')[1]}';
+            minVentController.text =
+                '${event.snapshot.value['vent'].split(',')[0]}';
+            delayController.text = "${event.snapshot.value['delay']}";
+            historicalDelayController.text =
+                "${event.snapshot.value['timeToWait']}";
+            break;
+          }
+      }
+      emit(GetDataDone());
+    });
+  }
+
+  String airRatioToText(int ratio) {
+    List<String> airText = [
+      'fresh',
+      'Safe',
+      'good',
+      'medium',
+      'danger',
+      'danger+',
+      'danger++'
+    ];
+    List<int> ranges = [40, 100, 150, 250, 300, 400, 500];
+    for (int i = 0; i < ranges.length; i++) {
+      if (ratio <= ranges[i]) {
+        return airText[i];
+      }
+    }
+    return "Died";
+  }
+
+  List<double> objectsToList(List oldList, int ratio) {
+    if (ratio == -1) {
+      ratio = 2 * int.parse(maxTempController.text) -
+          int.parse(minTempController.text);
+    }
+
+    List<double> newList = [];
+    for (var i in oldList) {
+      try {
+        newList.add(i.toDouble() / ratio);
+      } catch (err) {
+        continue;
+      }
+    }
+    return newList;
+  }
+
+  /// firebase database functions
+
+  void deviceStatus(int device) {
+    if (!devicesAutoBoolList[device]) {
+      List<String> deviceName = ['Set_ManualHA', 'Set_ManualHB', 'Set_ManualF'];
+      devicesLoadBoolList[device] = true;
+      dataBase.child(uId).child('Heaters').update({
+        deviceName[device]: !devicesBoolList[device] ? "ON" : "OFF"
+      }).then((value) {
+        emit(ChangeDeviceStatus());
+      }).catchError((err) {
+        errorToast("an error happened");
+      });
+    } else {
+      errorToast("device is Automatic");
+    }
+  }
+
+  void deviceAutoStatus(int index) {
+    List<String> deviceName = ['heaterAauto', 'heaterBAuto', 'FanAuto'];
+
+    devicesAutoBoolList[index] = !devicesAutoBoolList[index];
+    dataBase.child(uId).child('Heaters').update({
+      deviceName[index]: devicesAutoBoolList[index] ? "ON" : "OFF"
+    }).then((value) {
+      emit(ChangeDeviceStatus());
+    }).catchError((err) {
+      errorToast("an error happened");
+    });
+  }
+
+  void ledStatus(int index) {
+    List<String> deviceName = ['Set_Led1', 'Set_Light'];
+
+    ledLoadSetState[index] = true;
+    dataBase.child(uId).child('Lights').update(
+        {deviceName[index]: !ledGetState[index] ? 'ON' : 'OFF'}).then((value) {
+      emit(ChangeDeviceStatus());
+    }).catchError((err) {
+      errorToast("an error happened");
+    });
+    emit(ChangeDeviceStatus());
+  }
+
+  void sendValuesRanges() {
+    dataBase.child(uId).child("valueRanges").update({
+      "delay": delayController.text,
+      "temp": "${minTempController.text},${maxTempController.text}",
+      "vent": "${minVentController.text},${maxVentController.text}",
+      "timeToWait": historicalDelayController.text
+    }).then((value) {
+      emit(SendDataToFireState());
+    }).catchError((err) {
+      errorToast("An error Happened");
+    });
+  }
+
+  void sendResetEsp() {
+    dataBase.child(uId).update({'resetFlag': "ON"}).then((value) {
+      infoToast('ESP reset successfully');
+      emit(SendDataToFireState());
+    }).catchError((err) {
+      errorToast("An error Happened");
+    });
+  }
+
+  void sendConfigOnline(
+    BuildContext context,
+    String wifiName,
+    String wifiPassword, {
+    String nextId = 'null',
+    String nextPass = 'null',
+  }) async {
+    emit(SendConfigLoading());
+    if (nextId == 'null') {
+      dataBase
+          .child(uId)
+          .child("newConfig")
+          .update({'pass': wifiName, 'ssid': wifiPassword});
+      dataBase.child(uId).update({'configFlag': 'ON'});
+      infoToast('ESP Configuration set');
+      currentPage = 0;
+      navigateAndReplace(context, MainScreen(null));
+    } else {
+      FirebaseAuth.instance
+          .signInWithEmailAndPassword(email: nextId, password: nextPass)
+          .then((value) {
+        String nextUId = value.user!.uid + '_1';
+        dataBase
+            .child(uId)
+            .child("newConfig")
+            .update({'pass': wifiName, 'ssid': wifiPassword, 'uId': nextUId});
+        dataBase.child(uId).update({'configFlag': "ON"});
+        currentPage = 0;
+        navigateAndReplace(context, MainScreen(null));
+        infoToast('ESP Configuration set');
+        emit(SendConfigDone());
+      }).catchError((err) {
+        errorToast(err.toString().split(']')[1].trim());
+        emit(SendConfigError());
+      });
+    }
+  }
+
+  void sendToEsp(BuildContext context, String wifiName, String wifiPassword) {
+    emit(SendConfigLoading());
+    var url = Uri.parse(
+        'http://192.168.4.1/data?user=$uId&wifi=$wifiName&pass=$wifiPassword');
+    http.read(url).catchError((e) {
+      errorToast(
+          "Error happened ,make sure you connect to ESP wifi and try again");
+      emit(SendConfigError());
+    }).then((value) {
+      if (value.trim() != "Failed") {
+        currentPage = 0;
+        navigateAndReplace(context, MainScreen(null));
+        emit(SendConfigDone());
+      } else {
+        errorToast("Error happened ,make sure Your WIFI and pass is correct ");
+        emit(SendConfigError());
+      }
+    });
+  }
+
+  void addFarmDevise() {
+    usersCount++;
+    for (int i = 1; i < usersCount; i++) {
+      dataBase
+          .child(uId.split('_')[0] + '_$i')
+          .update({'usersCount': usersCount});
+    }
+    String jsonData = firebaseInitialData(
+        uId.split('_')[0] + '_' + '$usersCount', usersCount);
+    var data = json.decode(jsonData);
+    dataBase.child(uId.split('_')[0] + '_$usersCount').set(data);
+    emit(AddFarmDeviseState());
+  }
+
+  /// data sheet functions
   Future<void> valuesToDefault() async {
     listener.cancel();
     listener = null;
@@ -329,293 +581,39 @@ class AppCubit extends Cubit<AppStates> {
     }
   }
 
-  void checkKeepAlive(int allState) async {
-    if (allState == 1 && timerListener == false) {
-      timerListener = true;
-      isEspConnected = true;
-      Timer.periodic(Duration(seconds: 20), (Timer t) {
-        if (uId == "") {
-          t.cancel();
-          return;
-        }
-        dataBase.child(uId).once().then((value) {
-          int currentKeepAlive = value.value['keepAlive'];
-          isEspConnected = (currentKeepAlive != lastKeepAliveValue);
-          lastKeepAliveValue = currentKeepAlive;
-          emit(KeepAliveChecked());
-          if (!isEspConnected) {
-            timerListener = false;
-            t.cancel();
-          }
-        });
-      });
-    }
+  /// ui update functions
+
+  void changePassShowClicked() {
+    hidePassword = !hidePassword;
+    emit(ChangePassShowState());
   }
 
-  String driveToImage(String driveUrl) {
-    String imageUrl = '';
-    if (driveUrl.contains('drive.google.com')) {
-      imageUrl = "https://drive.google.com/uc?export=view&id=" +
-          driveUrl.split('/')[3];
-    }
-    return imageUrl;
+  void changeCurrentScreen(int screen) {
+    currentPage = screen;
+    emit(AppChangeScreen());
   }
 
-  Future<void> virtualLogOutThenIn(BuildContext context, String nextId) async {
-    valuesToDefault();
-    uId = nextId;
-    readFireDataOnce();
-    readFireDataListener();
-    currentPage = 0;
-    Navigator.of(context).pop();
-    // navigateAndReplace(context, MainScreen(null));
+  void rememberMeBoxClicked() {
+    rememberMe = !rememberMe;
+    emit(ChangeRememberBoxShowState());
   }
 
-  void logOut(BuildContext context) async {
-    final prefs = await SharedPreferences.getInstance();
-    await FirebaseMessaging.instance
-        .unsubscribeFromTopic(uId.split("_")[0])
-        .catchError((err) {
-      errorToast("Error at change account");
-    });
-    valuesToDefault();
-    prefs.clear();
-    navigateAndReplace(context, LoginPage());
+  void sendNewUserCheckBox() {
+    sendNewUser = !sendNewUser;
+    emit(ChangeRememberBoxShowState());
   }
 
-  void readFireDataOnce() {
-    print(uId);
-    tempReading = [];
-    humReading = [];
-    emit(GetDataLoading());
-    dataBase.child(uId).once().then((snap) {
-      usersCount = snap.value['usersCount'];
-      lastKeepAliveValue = snap.value['keepAlive'];
-      tempReading = objectsToList(snap.value['Temp'].values.toList(), 1);
-
-      humReading = objectsToList(snap.value['Hum'].values.toList(), 1);
-      airQuality = snap.value['airQuality'].toDouble();
-      airQualityText = airRatioToText(airQuality.round());
-      Map tempEspTime = snap.value['Time'];
-      espTime =
-          "${tempEspTime['Hour']}:${tempEspTime['Minute']}:${tempEspTime['Seconds']}";
-
-      List<String> deviceName = ['Get_Led1', 'Get_Light'];
-      for (int i = 0; i < deviceName.length; i++) {
-        ledGetState[i] = '${snap.value['Lights'][deviceName[i]]}' == 'ON';
-      }
-      deviceName = ['Get_ManualHA', 'Get_ManualHB', 'Get_ManualF'];
-      for (int i = 0; i < deviceName.length; i++) {
-        devicesBoolList[i] = '${snap.value['Heaters'][deviceName[i]]}' == 'ON';
-      }
-      maxTempController.text =
-          '${snap.value['valueRanges']['temp'].split(',')[1]}';
-      minTempController.text =
-          '${snap.value['valueRanges']['temp'].split(',')[0]}';
-      maxVentController.text =
-          '${snap.value['valueRanges']['vent'].split(',')[1]}';
-      minVentController.text =
-          '${snap.value['valueRanges']['vent'].split(',')[0]}';
-      delayController.text = "${snap.value['valueRanges']['delay']}";
-      historicalDelayController.text =
-          "${snap.value['valueRanges']['timeToWait']}";
-      currentUserName = snap.value['RFID']['data'].split(',')[0];
-      currentUserImageUrl =
-          driveToImage(snap.value['RFID']['data'].split(',')[1]);
-      currentUserId = "${snap.value['RFID']['lastID'].split(',')[0]}";
-      currentUserState = "${snap.value['RFID']['lastID'].split(',')[1]}";
-      emit(GetDataDone());
-    }).catchError((err) {
-      print(err);
-    });
+  void mainDrawerValuesList() {
+    mainDrawerValuesListBool = !mainDrawerValuesListBool;
+    emit(MainDrawerValuesListState());
   }
 
-  void sendToEsp(BuildContext context, String wifiName, String wifiPassword) {
-    emit(SendConfigLoading());
-    var url = Uri.parse(
-        'http://192.168.4.1/data?user=$uId&wifi=$wifiName&pass=$wifiPassword');
-    http.read(url).catchError((e) {
-      errorToast(
-          "Error happened ,make sure you connect to ESP wifi and try again");
-      emit(SendConfigError());
-    }).then((value) {
-      if (value.trim() != "Failed") {
-        currentPage = 0;
-        navigateAndReplace(context, MainScreen(null));
-        emit(SendConfigDone());
-      } else {
-        errorToast("Error happened ,make sure Your WIFI and pass is correct ");
-        emit(SendConfigError());
-      }
-    });
+  void mainDrawerFarmsListList() {
+    mainDrawerFarmsListBool = !mainDrawerFarmsListBool;
+    emit(MainDrawerValuesListState());
   }
 
-  void sendConfigOnline(
-    BuildContext context,
-    String wifiName,
-    String wifiPassword, {
-    String nextId = 'null',
-    String nextPass = 'null',
-  }) async {
-    emit(SendConfigLoading());
-    if (nextId == 'null') {
-      dataBase
-          .child(uId)
-          .child("newConfig")
-          .update({'pass': wifiName, 'ssid': wifiPassword});
-      dataBase.child(uId).update({'configFlag': 'ON'});
-      infoToast('ESP Configuration set');
-      currentPage = 0;
-      navigateAndReplace(context, MainScreen(null));
-    } else {
-      FirebaseAuth.instance
-          .signInWithEmailAndPassword(email: nextId, password: nextPass)
-          .then((value) {
-        String nextUId = value.user!.uid + '_1';
-        dataBase
-            .child(uId)
-            .child("newConfig")
-            .update({'pass': wifiName, 'ssid': wifiPassword, 'uId': nextUId});
-        dataBase.child(uId).update({'configFlag': "ON"});
-        currentPage = 0;
-        navigateAndReplace(context, MainScreen(null));
-        infoToast('ESP Configuration set');
-        emit(SendConfigDone());
-      }).catchError((err) {
-        errorToast(err.toString().split(']')[1].trim());
-        emit(SendConfigError());
-      });
-    }
-  }
-
-  void readFireDataListener() {
-    listener = dataBase.child(uId).onChildChanged.listen((event) {
-      switch (event.snapshot.key) {
-        case 'Heaters':
-          {
-            List<String> deviceName = [
-              'Get_ManualHA',
-              'Get_ManualHB',
-              'Get_ManualF'
-            ];
-            for (int i = 0; i < deviceName.length; i++) {
-              bool temp = '${event.snapshot.value[deviceName[i]]}' == 'ON';
-              if (devicesBoolList[i] != temp) {
-                devicesBoolList[i] = temp;
-                devicesLoadBoolList[i] = false;
-              }
-            }
-            break;
-          }
-        case 'Hum':
-          {
-            humReading = objectsToList(event.snapshot.value.values.toList(), 1);
-            break;
-          }
-        case 'Temp':
-          {
-            tempReading =
-                objectsToList(event.snapshot.value.values.toList(), 1);
-            break;
-          }
-        case 'Lights':
-          {
-            List<String> deviceName = ['Get_Led1', 'Get_Light'];
-            for (int i = 0; i < deviceName.length; i++) {
-              bool temp = '${event.snapshot.value[deviceName[i]]}' == 'ON';
-              if (ledGetState[i] != temp) {
-                ledGetState[i] = temp;
-                ledLoadSetState[i] = false;
-              }
-            }
-            break;
-          }
-        case 'Time':
-          {
-            Map tempEspTime = event.snapshot.value;
-            espTime =
-                "${tempEspTime['Hour']}:${tempEspTime['Minute']}:${tempEspTime['Seconds']}";
-            break;
-          }
-        case "airQuality":
-          {
-            airQuality = event.snapshot.value.toDouble();
-            airQualityText = airRatioToText(airQuality.round());
-            break;
-          }
-        case "keepAlive":
-          {
-            lastKeepAliveValue = -1;
-            isEspConnected = true;
-            checkKeepAlive(1);
-            break;
-          }
-        case "RFID":
-          {
-            currentUserName = event.snapshot.value['data'].split(',')[0];
-            currentUserImageUrl =
-                driveToImage(event.snapshot.value['data'].split(',')[1]);
-            currentUserId = "${event.snapshot.value['lastID'].split(',')[0]}";
-            currentUserState =
-                "${event.snapshot.value['lastID'].split(',')[1]}";
-            break;
-          }
-        case "valueRanges":
-          {
-            maxTempController.text =
-                '${event.snapshot.value['temp'].split(',')[1]}';
-            minTempController.text =
-                '${event.snapshot.value['temp'].split(',')[0]}';
-            maxVentController.text =
-                '${event.snapshot.value['vent'].split(',')[1]}';
-            minVentController.text =
-                '${event.snapshot.value['vent'].split(',')[0]}';
-            delayController.text = "${event.snapshot.value['delay']}";
-            historicalDelayController.text =
-                "${event.snapshot.value['timeToWait']}";
-            break;
-          }
-      }
-      emit(GetDataDone());
-    });
-  }
-
-  String airRatioToText(int ratio) {
-    List<String> airText = [
-      'fresh',
-      'Safe',
-      'good',
-      'medium',
-      'danger',
-      'danger+',
-      'danger++'
-    ];
-    List<int> ranges = [40, 100, 150, 250, 300, 400, 500];
-    for (int i = 0; i < ranges.length; i++) {
-      if (ratio <= ranges[i]) {
-        return airText[i];
-      }
-    }
-    return "Died";
-  }
-
-  List<double> objectsToList(List oldList, int ratio) {
-    if (ratio == -1) {
-      ratio = 2 * int.parse(maxTempController.text) -
-          int.parse(minTempController.text);
-    }
-
-    List<double> newList = [];
-    for (var i in oldList) {
-      try {
-        newList.add(i.toDouble() / ratio);
-      } catch (err) {
-        continue;
-      }
-    }
-    return newList;
-  }
-
+  /// network
   void networkListener() {
     Connectivity().checkConnectivity().then((value) {
       networkConnection = (value != ConnectivityResult.none);
@@ -634,25 +632,168 @@ class AppCubit extends Cubit<AppStates> {
     });
   }
 
-  void addFarmDevise() {
-    usersCount++;
-    for (int i = 1; i < usersCount; i++) {
-      dataBase
-          .child(uId.split('_')[0] + '_$i')
-          .update({'usersCount': usersCount});
+  /// RFID data functions
+  String driveToImage(String driveUrl) {
+    String imageUrl = '';
+    if (driveUrl.contains('drive.google.com')) {
+      driveUrl.split('/')[3];
     }
-    String jsonData = firebaseInitialData(
-        uId.split('_')[0] + '_' + '$usersCount', usersCount);
-    var data = json.decode(jsonData);
-    dataBase.child(uId.split('_')[0] + '_$usersCount').set(data);
-    emit(AddFarmDeviseState());
+    return imageUrl;
+  }
+
+  void editEmployee(Map data, BuildContext context) {
+    activeUser = -1;
+
+    emit(SendToEditLoading());
+    var url = Uri.parse(
+        'https://script.google.com/macros/s/AKfycbxjeykhu5BpiraSKXN_ugb-oz6_3nSC51_Oc_-zMcNywjLttXFMXJ-S0Qb3en6Y7hRS/exec?uid=$uId&fun=add&cardid=${data['ID']}&persondata=$data&index=2');
+    http.read(url).then((value) {
+      if (currentUserState == "notfound") {
+        currentUserState = "new";
+        currentUserName = data['Name'];
+        dataBase.child(uId).child('RFID').update({
+          "lastID": "$currentUserId,new",
+          "data": "${data['Name']},${data['ImageLink']}"
+        });
+      }
+      currentPage = 0;
+      employeesNamesList = [];
+      thereEmployee = true;
+      Navigator.of(context)
+        ..pop()
+        ..pop();
+      emit(SendToEditDone());
+    }).catchError((err) {
+      emit(SendToEditError());
+      errorToast('An error happened');
+    });
+  }
+
+  void deleteEmployee(int userIndex, BuildContext context) {
+    emit(DeleteEmployeeLoading());
+    employeesNamesList.removeAt(userIndex - 1);
+    activeUser = 0;
+    var url = Uri.parse(
+        'https://script.google.com/macros/s/AKfycbxjeykhu5BpiraSKXN_ugb-oz6_3nSC51_Oc_-zMcNywjLttXFMXJ-S0Qb3en6Y7hRS/exec?uid=$uId&fun=delete&cardid=18010102&persondata=zzzz&index=$userIndex');
+    http.read(url).then((value) {
+      Navigator.of(context).pop();
+      emit(DeleteEmployeeDone());
+    });
+  }
+
+  void getEmployeeData(int index, BuildContext context, {bool edit = false}) {
+    emit(GetPersonLoading());
+
+    if (index == activeUser && userData.isNotEmpty) {
+      emit(GetPersonDone());
+      if (!edit) {
+        navigateAndPush(context, UserScreen(index));
+        emit(GetPersonDone());
+      }
+    } else {
+      activeUser = index;
+      var url = Uri.parse(
+          'https://script.google.com/macros/s/AKfycbxjeykhu5BpiraSKXN_ugb-oz6_3nSC51_Oc_-zMcNywjLttXFMXJ-S0Qb3en6Y7hRS/exec?uid=$uId&fun=getdata&cardid=18010102&persondata=zzzz&index=$index');
+      http.read(url).then((value) {
+        value = '{"' + value + '"}';
+        value = value.replaceAll(':,', ':NULL,');
+        value = value.replaceAll(':', '":"');
+        value = value.replaceAll(',', '","');
+        userData = json.decode(value);
+        if (!edit) {
+          navigateAndPush(context, UserScreen(index));
+        }
+        emit(GetPersonDone());
+      }).catchError((err) {
+        emit(GetPersonError());
+      });
+    }
+  }
+
+  void getEmployeeNames() {
+    emit(GetEmployeeNamesLoading());
+    var url = Uri.parse(
+        'https://script.google.com/macros/s/AKfycbxjeykhu5BpiraSKXN_ugb-oz6_3nSC51_Oc_-zMcNywjLttXFMXJ-S0Qb3en6Y7hRS/exec?uid=$uId&fun=getnames&cardid=18010102&persondata=zzzz&index=2');
+    http.read(url).catchError((err) {
+      errorToast("An error happen");
+      emit(GetEmployeeNamesError());
+    }).then((value) {
+      employeesNamesList = [];
+      if (value.startsWith('[[')) {
+        value = value.replaceAll('[["', '');
+        value = value.replaceAll('"]]', '');
+        employeesNamesList = value.split('"],["');
+      }
+      if (employeesNamesList.isEmpty) {
+        thereEmployee = false;
+      }
+      emit(GetEmployeeNamesDone());
+    });
+  }
+
+  /// authentication functions
+  void getUserLoginData(bool? checkRemember) async {
+    emit(CheckUserStateLoading());
+    final prefs = await SharedPreferences.getInstance();
+    if (checkRemember == true) {
+      uId = prefs.getString("uId")!;
+      // uId = "7AHR3qi111QcnkK1AZkOMUyMSve2_1";
+      readFireDataOnce();
+      readFireDataListener();
+      currentPage = 0;
+      emit(UserSignUpDone());
+    }
+    networkListener();
+    emit(CheckUserStateDone());
+  }
+
+  void saveData(String uId) async {
+    final prefs = await SharedPreferences.getInstance();
+    prefs.setBool('rememberMe', rememberMe);
+    if (rememberMe) {
+      prefs.setString('uId', uId);
+    }
+  }
+
+  void logOut(BuildContext context) async {
+    final prefs = await SharedPreferences.getInstance();
+    await FirebaseMessaging.instance
+        .unsubscribeFromTopic(uId.split("_")[0])
+        .catchError((err) {
+      errorToast("Error at change account");
+    });
+    valuesToDefault();
+    prefs.clear();
+    navigateAndReplace(context, LoginPage());
+  }
+
+  Future<void> virtualLogOutThenIn(BuildContext context, String nextId) async {
+    valuesToDefault();
+    uId = nextId;
+    readFireDataOnce();
+    readFireDataListener();
+    currentPage = 0;
+    Navigator.of(context).pop();
+    // navigateAndReplace(context, MainScreen(null));
+  }
+
+  void forgetPassword(BuildContext context, String email) async {
+    bool errorHappen = false;
+    emit(UserSignUpLoading());
+    FirebaseAuth.instance
+        .sendPasswordResetEmail(email: email)
+        .catchError((err) {
+      errorToast(err.toString());
+      errorHappen = true;
+    }).whenComplete(() {
+      if (!errorHappen) {
+        Navigator.of(context).pop();
+        infoToast("Password reset email sent to your email");
+      }
+    }).timeout(Duration(minutes: 2));
   }
 
   void signIn(BuildContext context, String email, String password) async {
-    /*
-    * library to login "it take the email and password and return uid"
-    * */
-
     emit(UserSignInLoading());
     FirebaseAuth.instance
         .signInWithEmailAndPassword(email: email, password: password)
@@ -687,46 +828,39 @@ class AppCubit extends Cubit<AppStates> {
     });
   }
 
-  void getUserLoginData(bool? checkRemember) async {
-    emit(CheckUserStateLoading());
-    final prefs = await SharedPreferences.getInstance();
-    if (checkRemember == true) {
-      String uId = prefs.getString("uId")!;
-      this.uId = uId;
-      readFireDataOnce();
-      readFireDataListener();
-      currentPage = 0;
-      emit(UserSignUpDone());
-    }
-    networkListener();
-    emit(CheckUserStateDone());
-  }
-
-  void saveData(String uId) async {
-    final prefs = await SharedPreferences.getInstance();
-    prefs.setBool('rememberMe', rememberMe);
-    if (rememberMe) {
-      prefs.setString('uId', uId);
-    }
-  }
-
-  void forgetPassword(BuildContext context, String email) async {
-    /*
-    * library to sign up "it take the email and password and return uid"
-    * */
-    bool errorHappen = false;
+  void signUp(BuildContext context, String email, String password) async {
     emit(UserSignUpLoading());
     FirebaseAuth.instance
-        .sendPasswordResetEmail(email: email)
-        .catchError((err) {
-      errorToast(err.toString());
-      errorHappen = true;
-    }).whenComplete(() {
-      if (!errorHappen) {
-        Navigator.of(context).pop();
-        infoToast("Password reset email sent to your email");
-      }
-    }).timeout(Duration(minutes: 2));
+        .createUserWithEmailAndPassword(
+      email: email,
+      password: password,
+    )
+        .then((value) {
+      uId = value.user!.uid + '_1';
+      String jsonData = firebaseInitialData(uId, 1);
+
+      var data = json.decode(jsonData);
+      dataBase.child(uId).set(data);
+
+      User user = value.user!;
+      user
+          .sendEmailVerification()
+          .whenComplete(() {
+            emit(UserVerifyLoading());
+            infoToast("Verification email sent to our email please check it");
+            Future.delayed(const Duration(seconds: 5), () {
+              navigateAndReplace(context, LoginPage());
+            });
+          })
+          .timeout(Duration(minutes: 2))
+          .catchError((err) {
+            emit(UserSignUpError());
+            errorToast("verification error");
+          });
+    }).catchError((err) {
+      emit(UserSignUpError());
+      errorToast(err.toString().split(']')[1].trim());
+    });
   }
 
   String firebaseInitialData(String newId, int userCount) {
@@ -792,137 +926,5 @@ class AppCubit extends Cubit<AppStates> {
     }
 }
     ''';
-  }
-
-  void signUp(BuildContext context, String email, String password) async {
-    /*
-    * library to sign up "it take the email and password and return uid"
-    * */
-    emit(UserSignUpLoading());
-    FirebaseAuth.instance
-        .createUserWithEmailAndPassword(
-      email: email,
-      password: password,
-    )
-        .then((value) {
-      uId = value.user!.uid + '_1';
-      String jsonData = firebaseInitialData(uId, 1);
-
-      var data = json.decode(jsonData);
-      dataBase.child(uId).set(data);
-
-      User user = value.user!;
-      user
-          .sendEmailVerification()
-          .whenComplete(() {
-            emit(UserVerifyLoading());
-            infoToast("Verification email sent to our email please check it");
-            Future.delayed(const Duration(seconds: 5), () {
-              navigateAndReplace(context, LoginPage());
-            });
-          })
-          .timeout(Duration(minutes: 2))
-          .catchError((err) {
-            emit(UserSignUpError());
-            errorToast("verification error");
-          });
-    }).catchError((err) {
-      emit(UserSignUpError());
-      errorToast(err.toString().split(']')[1].trim());
-    });
-  }
-
-  void deviceStatus(int device) {
-    if (!devicesAutoBoolList[device]) {
-      List<String> deviceName = ['Set_ManualHA', 'Set_ManualHB', 'Set_ManualF'];
-      devicesLoadBoolList[device] = true;
-      dataBase.child(uId).child('Heaters').update({
-        deviceName[device]: !devicesBoolList[device] ? "ON" : "OFF"
-      }).then((value) {
-        emit(ChangeDeviceStatus());
-      }).catchError((err) {
-        errorToast("an error happened");
-      });
-    } else {
-      errorToast("device is Automatic");
-    }
-  }
-
-  void deviceAutoStatus(int index) {
-    List<String> deviceName = ['heaterAauto', 'heaterBAuto', 'FanAuto'];
-
-    devicesAutoBoolList[index] = !devicesAutoBoolList[index];
-    dataBase.child(uId).child('Heaters').update({
-      deviceName[index]: devicesAutoBoolList[index] ? "ON" : "OFF"
-    }).then((value) {
-      emit(ChangeDeviceStatus());
-    }).catchError((err) {
-      errorToast("an error happened");
-    });
-  }
-
-  void ledStatus(int index) {
-    List<String> deviceName = ['Set_Led1', 'Set_Light'];
-
-    ledLoadSetState[index] = true;
-    dataBase.child(uId).child('Lights').update(
-        {deviceName[index]: !ledGetState[index] ? 'ON' : 'OFF'}).then((value) {
-      emit(ChangeDeviceStatus());
-    }).catchError((err) {
-      errorToast("an error happened");
-    });
-    emit(ChangeDeviceStatus());
-  }
-
-  void sendValuesRanges() {
-    dataBase.child(uId).child("valueRanges").update({
-      "delay": delayController.text,
-      "temp": "${minTempController.text},${maxTempController.text}",
-      "vent": "${minVentController.text},${maxVentController.text}",
-      "timeToWait": historicalDelayController.text
-    }).then((value) {
-      emit(SendDataToFireState());
-    }).catchError((err) {
-      errorToast("An error Happened");
-    });
-  }
-
-  void sendResetEsp() {
-    dataBase.child(uId).update({'resetFlag': "ON"}).then((value) {
-      infoToast('ESP reset successfully');
-      emit(SendDataToFireState());
-    }).catchError((err) {
-      errorToast("An error Happened");
-    });
-  }
-
-  void changePassShowClicked() {
-    hidePassword = !hidePassword;
-    emit(ChangePassShowState());
-  }
-
-  void changeCurrentScreen(int screen) {
-    currentPage = screen;
-    emit(AppChangeScreen());
-  }
-
-  void rememberMeBoxClicked() {
-    rememberMe = !rememberMe;
-    emit(ChangeRememberBoxShowState());
-  }
-
-  void sendNewUserCheckBox() {
-    sendNewUser = !sendNewUser;
-    emit(ChangeRememberBoxShowState());
-  }
-
-  void mainDrawerValuesList() {
-    mainDrawerValuesListBool = !mainDrawerValuesListBool;
-    emit(MainDrawerValuesListState());
-  }
-
-  void mainDrawerFarmsListList() {
-    mainDrawerFarmsListBool = !mainDrawerFarmsListBool;
-    emit(MainDrawerValuesListState());
   }
 }

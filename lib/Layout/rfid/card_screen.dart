@@ -1,5 +1,5 @@
 import 'package:bird_system/Layout/rfid/edit_user.dart';
-import 'package:bird_system/cubit/cubit.dart';
+import 'package:bird_system/cubit/app_cubit.dart';
 import 'package:bird_system/cubit/states.dart';
 import 'package:bird_system/reusable/reusable_functions.dart';
 import 'package:flutter/cupertino.dart';

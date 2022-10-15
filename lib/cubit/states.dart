@@ -2,7 +2,17 @@ abstract class AppStates {}
 
 class AppInitial extends AppStates {}
 
+//  schedule
+class ScheduleAppLoadingState extends AppStates {}
+
+class ScheduleAppReadyState extends AppStates {}
+
+class AddTaskState extends AppStates {}
+
+class GeneralState extends AppStates {}
+
 // Sign in states
+
 class UserSignInLoading extends AppStates {}
 
 class UserVerifyLoading extends AppStates {}

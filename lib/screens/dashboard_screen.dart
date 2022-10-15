@@ -1,4 +1,4 @@
-import 'package:bird_system/cubit/cubit.dart';
+import 'package:bird_system/cubit/app_cubit.dart';
 import 'package:bird_system/cubit/states.dart';
 import 'package:bird_system/reusable/reusable_functions.dart';
 import 'package:flutter/material.dart';
@@ -498,7 +498,8 @@ class DashBoardScreen extends StatelessWidget {
                                         width: 20,
                                       );
                                     },
-                                    itemCount: 3),
+                                    itemCount: cubit.fansBoolList.length +
+                                        cubit.heatersBoolList.length),
                               ),
                             ],
                           ),
@@ -538,97 +539,52 @@ class DashBoardScreen extends StatelessWidget {
                               ),
                               Expanded(
                                 flex: 2,
-                                child: Row(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [
-                                    Column(
-                                      children: [
-                                        Text(
-                                          "INSIDE",
-                                          style: TextStyle(
-                                              color: customGrey,
-                                              fontSize: 14,
-                                              fontWeight: FontWeight.bold),
-                                        ),
-                                        SizedBox(
-                                          height: 5,
-                                        ),
-                                        TextButton(
-                                            child: Text(cubit.ledGetState[0] ? "on" : "off ",
-                                                style: TextStyle(
-                                                    color: cubit.ledLoadSetState[0]
-                                                        ? Colors.blue
-                                                        : (cubit.ledGetState[0]
-                                                            ? Colors.green
-                                                            : Colors.red),
-                                                    fontSize: 17)),
-                                            style: ButtonStyle(
-                                                padding: MaterialStateProperty.all<EdgeInsets>(
-                                                    EdgeInsets.all(15)),
-                                                foregroundColor:
-                                                    MaterialStateProperty.all<Color>(
-                                                        customViolet),
-                                                shape: MaterialStateProperty.all<RoundedRectangleBorder>(
-                                                    RoundedRectangleBorder(
-                                                        borderRadius:
-                                                            BorderRadius.circular(18.0),
-                                                        side: BorderSide(color: cubit.ledLoadSetState[0] ? Colors.blue : (cubit.ledGetState[0] ? Colors.green : Colors.red))))),
-                                            onPressed: () {
-                                              if (cubit.isEspConnected) {
-                                                cubit.ledStatus(0);
-                                              } else {
-                                                errorToast(
-                                                    'No Device connected');
-                                              }
-                                            }),
-                                      ],
-                                    ),
-                                    SizedBox(
-                                      width: 30,
-                                    ),
-                                    Column(
-                                      children: [
-                                        Text(
-                                          "OUTSIDE",
-                                          style: TextStyle(
-                                              color: customGrey,
-                                              fontSize: 14,
-                                              fontWeight: FontWeight.bold),
-                                        ),
-                                        SizedBox(
-                                          height: 5,
-                                        ),
-                                        TextButton(
-                                            child: Text(cubit.ledGetState[1] ? "on" : "off",
-                                                style: TextStyle(
-                                                    color: cubit.ledLoadSetState[1]
-                                                        ? Colors.blue
-                                                        : (cubit.ledGetState[1]
-                                                            ? Colors.green
-                                                            : Colors.red),
-                                                    fontSize: 17)),
-                                            style: ButtonStyle(
-                                                padding: MaterialStateProperty.all<EdgeInsets>(
-                                                    EdgeInsets.all(15)),
-                                                foregroundColor:
-                                                    MaterialStateProperty.all<Color>(
-                                                        customViolet),
-                                                shape: MaterialStateProperty.all<RoundedRectangleBorder>(
-                                                    RoundedRectangleBorder(
-                                                        borderRadius:
-                                                            BorderRadius.circular(18.0),
-                                                        side: BorderSide(color: cubit.ledLoadSetState[1] ? Colors.blue : (cubit.ledGetState[1] ? Colors.green : Colors.red))))),
-                                            onPressed: () {
-                                              if (cubit.isEspConnected) {
-                                                cubit.ledStatus(1);
-                                              } else {
-                                                errorToast(
-                                                    'No Device connected');
-                                              }
-                                            }),
-                                      ],
-                                    ),
-                                  ],
+                                child: ListView.separated(
+                                  itemCount: cubit.ledState.length,
+                                  separatorBuilder: (_, __) => SizedBox(
+                                    width: 10,
+                                  ),
+                                  itemBuilder: (context, i) => Column(
+                                    children: [
+                                      Text(
+                                        "Led ${i + 1}",
+                                        style: TextStyle(
+                                            color: customGrey,
+                                            fontSize: 14,
+                                            fontWeight: FontWeight.bold),
+                                      ),
+                                      SizedBox(
+                                        height: 5,
+                                      ),
+                                      TextButton(
+                                          child: Text(
+                                              cubit.ledState[i] ? "on" : "off ",
+                                              style: TextStyle(
+                                                  color: cubit.ledLoadSetState[i]
+                                                      ? Colors.blue
+                                                      : (cubit.ledState[i]
+                                                          ? Colors.green
+                                                          : Colors.red),
+                                                  fontSize: 17)),
+                                          style: ButtonStyle(
+                                              padding: MaterialStateProperty.all<EdgeInsets>(
+                                                  EdgeInsets.all(15)),
+                                              foregroundColor:
+                                                  MaterialStateProperty.all<Color>(
+                                                      customViolet),
+                                              shape: MaterialStateProperty.all<RoundedRectangleBorder>(
+                                                  RoundedRectangleBorder(
+                                                      borderRadius: BorderRadius.circular(18.0),
+                                                      side: BorderSide(color: cubit.ledLoadSetState[i] ? Colors.blue : (cubit.ledState[i] ? Colors.green : Colors.red))))),
+                                          onPressed: () {
+                                            if (cubit.isEspConnected) {
+                                              cubit.ledStatus(0);
+                                            } else {
+                                              errorToast('No Device connected');
+                                            }
+                                          }),
+                                    ],
+                                  ),
                                 ),
                               ),
                             ],
@@ -643,8 +599,17 @@ class DashBoardScreen extends StatelessWidget {
     );
   }
 
-  Widget deviceItemBuilder(int index, AppCubit cubit) {
-    List<String> label = ['HeaterA', 'HeaterB', 'Fan'];
+  Widget deviceItemBuilder(int i, AppCubit cubit) {
+    bool isHeater = true;
+    if (i + 1 > cubit.heatersBoolList.length) {
+      isHeater = false;
+      i -= cubit.heatersBoolList.length;
+    }
+    List<bool> state = isHeater ? cubit.heatersBoolList : cubit.fansBoolList;
+    List<bool> load =
+        isHeater ? cubit.heatersLoadBoolList : cubit.fansLoadBoolList;
+    List<bool> auto =
+        isHeater ? cubit.heatersAutoBoolList : cubit.fansAutoBoolList;
     return Padding(
       padding: const EdgeInsets.all(8.0),
       child: Row(
@@ -652,7 +617,7 @@ class DashBoardScreen extends StatelessWidget {
           Column(
             children: [
               Text(
-                label[index],
+                isHeater ? "Heater ${i + 1}" : "Fan ${i + 1}",
                 style: TextStyle(
                     color: customGrey,
                     fontSize: 14,
@@ -663,36 +628,32 @@ class DashBoardScreen extends StatelessWidget {
               ),
               CircleAvatar(
                 radius: 25,
-                backgroundColor: cubit.devicesLoadBoolList[index]
+                backgroundColor: load[i]
                     ? Colors.blue.withOpacity(0.4)
-                    : (cubit.devicesBoolList[index]
+                    : (state[i]
                         ? Colors.green.withOpacity(0.4)
                         : Colors.red.withOpacity(0.4)),
                 child: IconButton(
                     iconSize: 35,
                     onPressed: () {
                       if (cubit.isEspConnected) {
-                        cubit.deviceStatus(index);
+                        cubit.deviceStatus(isHeater, i);
                       } else {
                         errorToast('No Device connected');
                       }
                     },
                     icon: Icon(
-                      cubit.devicesBoolList[index]
-                          ? Icons.flash_on
-                          : Icons.flash_off,
-                      color: cubit.devicesLoadBoolList[index]
+                      state[i] ? Icons.flash_on : Icons.flash_off,
+                      color: load[i]
                           ? Colors.blue
-                          : (cubit.devicesBoolList[index]
-                              ? Colors.green
-                              : Colors.red),
+                          : (state[i] ? Colors.green : Colors.red),
                     )),
               ),
               SizedBox(
                 height: 5,
               ),
               FlutterSwitch(
-                  value: cubit.devicesAutoBoolList[index],
+                  value: auto[i],
                   padding: 8.0,
                   showOnOff: true,
                   activeText: 'A',
@@ -707,7 +668,7 @@ class DashBoardScreen extends StatelessWidget {
                   ),
                   onToggle: (val) {
                     if (cubit.isEspConnected) {
-                      cubit.deviceAutoStatus(index);
+                      cubit.deviceAutoStatus(isHeater, i);
                     } else {
                       errorToast('No Device connected');
                     }

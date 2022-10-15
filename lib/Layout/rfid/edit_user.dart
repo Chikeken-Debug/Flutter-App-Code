@@ -1,4 +1,4 @@
-import 'package:bird_system/cubit/cubit.dart';
+import 'package:bird_system/cubit/app_cubit.dart';
 import 'package:bird_system/cubit/states.dart';
 import 'package:bird_system/reusable/reusable_functions.dart';
 import 'package:flutter/material.dart';
@@ -82,7 +82,7 @@ class EditUserScreen extends StatelessWidget {
                   if (nameController.text.isEmpty) {
                     errorToast("name can't be empty");
                   } else {
-                    Map data = {
+                    Map<String, dynamic> data = {
                       'Name': nameController.text,
                       'ID': id,
                       'Phone': phoneController.text.isEmpty

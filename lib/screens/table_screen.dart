@@ -1,4 +1,6 @@
-import 'package:bird_system/cubit/cubit.dart';
+// ignore_for_file: invalid_use_of_visible_for_testing_member
+
+import 'package:bird_system/cubit/app_cubit.dart';
 import 'package:bird_system/cubit/states.dart';
 import 'package:bird_system/reusable/reusable_functions.dart';
 import 'package:flutter/cupertino.dart';
@@ -22,7 +24,8 @@ class TableScreen extends StatelessWidget {
       listener: (BuildContext context, AppStates state) {},
       builder: (BuildContext context, AppStates state) {
         AppCubit cubit = AppCubit.get(context);
-        if (cubit.allGraphData.isEmpty && state is! GetAllGraphDataLoading) {
+        if (cubit.allGraphDataList.isEmpty &&
+            state is! GetAllGraphDataLoading) {
           cubit.getAllSensorsData();
         }
         return Scaffold(
@@ -70,7 +73,7 @@ class TableScreen extends StatelessWidget {
                       icon: Icon(Icons.restore_from_trash_outlined))
             ],
           ),
-          body: cubit.allGraphData.isEmpty
+          body: cubit.allGraphDataList.isEmpty
               ? Padding(
                   padding: const EdgeInsets.all(10),
                   child: Shimmer.fromColors(
@@ -125,6 +128,7 @@ class TableScreen extends StatelessWidget {
                             ratio = _baseScaleFactor * details.scale;
                           },
                           onScaleEnd: (details) {
+                            // ignore: invalid_use_of_protected_member
                             cubit.emit(ChangeDeviceStatus());
                           },
                           child: SingleChildScrollView(

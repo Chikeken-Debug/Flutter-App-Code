@@ -1,4 +1,4 @@
-import 'package:bird_system/cubit/cubit.dart';
+import 'package:bird_system/cubit/app_cubit.dart';
 import 'package:bird_system/cubit/states.dart';
 import 'package:bird_system/reusable/reusable_functions.dart';
 import 'package:flutter/cupertino.dart';
@@ -109,7 +109,7 @@ class UserScreen extends StatelessWidget {
                                     ),
                                   );
                                 },
-                                image: cubit.driveToImage(
+                                image: driveToImage(
                                     '${cubit.userData['ImageLink']}'),
                               ),
                             ),
@@ -261,5 +261,13 @@ class UserScreen extends StatelessWidget {
         );
       },
     );
+  }
+
+  String driveToImage(String driveUrl) {
+    String imageUrl = '';
+    if (driveUrl.contains('drive.google.com')) {
+      driveUrl.split('/')[3];
+    }
+    return imageUrl;
   }
 }

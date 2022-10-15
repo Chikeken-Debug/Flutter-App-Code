@@ -8,7 +8,8 @@ import 'package:permission_handler/permission_handler.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'Layout/login_page.dart';
 import 'Layout/main_screen.dart';
-import 'cubit/cubit.dart';
+import 'cubit/app_cubit.dart';
+import 'cubit/schedule_cubit.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -42,9 +43,16 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return BlocProvider(
-      create: (BuildContext context) =>
-          AppCubit()..getUserLoginData(rememberMe),
+    return MultiBlocProvider(
+      providers: [
+        BlocProvider(
+          create: (BuildContext context) => ScheduleCubit()..startApp(),
+        ),
+        BlocProvider(
+          create: (BuildContext context) =>
+              AppCubit()..getUserLoginData(rememberMe),
+        )
+      ],
       child: MaterialApp(
         navigatorKey: navigatorKey,
         title: 'Bird APP',

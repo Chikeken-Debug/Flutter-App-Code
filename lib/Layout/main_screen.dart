@@ -1,10 +1,13 @@
+// ignore_for_file: invalid_use_of_visible_for_testing_member
+
 import 'dart:convert';
 
 import 'package:animated_widgets/widgets/rotation_animated.dart';
 import 'package:animated_widgets/widgets/shake_animated_widget.dart';
 import 'package:bird_system/Layout/configuration_screen.dart';
 import 'package:bird_system/Layout/rfid/card_screen.dart';
-import 'package:bird_system/cubit/cubit.dart';
+import 'package:bird_system/Layout/schdule/home_screen.dart';
+import 'package:bird_system/cubit/app_cubit.dart';
 import 'package:bird_system/cubit/states.dart';
 import 'package:bird_system/reusable/reusable_functions.dart';
 import 'package:bird_system/screens/charts_screen.dart';
@@ -140,7 +143,7 @@ class MainScreen extends StatelessWidget {
                                                       title: Text(
                                                         "Farm ${index + 1}",
                                                         style: TextStyle(
-                                                          color: cubit.uId.split(
+                                                          color: AppCubit.uId.split(
                                                                       '_')[1] ==
                                                                   '${index + 1}'
                                                               ? customViolet
@@ -150,7 +153,7 @@ class MainScreen extends StatelessWidget {
                                                       onTap: () {
                                                         cubit.virtualLogOutThenIn(
                                                             context,
-                                                            cubit.uId.split(
+                                                            AppCubit.uId.split(
                                                                     '_')[0] +
                                                                 '_${index + 1}');
                                                       },
@@ -405,7 +408,59 @@ class MainScreen extends StatelessWidget {
                               ),
                               Row(
                                 mainAxisAlignment:
-                                    MainAxisAlignment.spaceAround,
+                                MainAxisAlignment.spaceAround,
+                                children: [
+                                  TextButton(
+                                    onPressed: () {
+                                      cubit.supScribe();
+                                    },
+
+                                    child: Text("Subscribe",
+                                        style: TextStyle(
+                                            color: Colors.green, fontSize: 12)),
+                                    style: ButtonStyle(
+                                        padding: MaterialStateProperty.all<
+                                            EdgeInsets>(EdgeInsets.all(15)),
+                                        foregroundColor:
+                                        MaterialStateProperty.all<Color>(
+                                            Colors.green),
+                                        shape: MaterialStateProperty.all<
+                                            RoundedRectangleBorder>(
+                                            RoundedRectangleBorder(
+                                                borderRadius:
+                                                BorderRadius.circular(18.0),
+                                                side: BorderSide(
+                                                    color: Colors.green)))),
+                                  ),
+                                  TextButton(
+                                      child: Text("unSubscribe",
+                                          style: TextStyle(
+                                              color: Colors.red,
+                                              fontSize: 12)),
+                                      style: ButtonStyle(
+                                          padding: MaterialStateProperty.all<
+                                              EdgeInsets>(EdgeInsets.all(15)),
+                                          foregroundColor:
+                                          MaterialStateProperty.all<Color>(
+                                              Colors.red),
+                                          shape: MaterialStateProperty.all<
+                                              RoundedRectangleBorder>(
+                                              RoundedRectangleBorder(
+                                                  borderRadius:
+                                                  BorderRadius.circular(18.0),
+                                                  side: BorderSide(color: Colors.red)))),
+                                      onPressed: () {
+                                        cubit.unSubscribe();
+                                      }),
+                                ],
+                              ),
+
+                              SizedBox(
+                                height: 10,
+                              ),
+                              Row(
+                                mainAxisAlignment:
+                                MainAxisAlignment.spaceAround,
                                 children: [
                                   TextButton(
                                     onPressed: () {},
@@ -423,13 +478,13 @@ class MainScreen extends StatelessWidget {
                                         padding: MaterialStateProperty.all<
                                             EdgeInsets>(EdgeInsets.all(15)),
                                         foregroundColor:
-                                            MaterialStateProperty.all<Color>(
-                                                customViolet),
+                                        MaterialStateProperty.all<Color>(
+                                            customViolet),
                                         shape: MaterialStateProperty.all<
-                                                RoundedRectangleBorder>(
+                                            RoundedRectangleBorder>(
                                             RoundedRectangleBorder(
                                                 borderRadius:
-                                                    BorderRadius.circular(18.0),
+                                                BorderRadius.circular(18.0),
                                                 side: BorderSide(
                                                     color: customViolet)))),
                                   ),
@@ -442,19 +497,20 @@ class MainScreen extends StatelessWidget {
                                           padding: MaterialStateProperty.all<
                                               EdgeInsets>(EdgeInsets.all(15)),
                                           foregroundColor:
-                                              MaterialStateProperty.all<Color>(
-                                                  customViolet),
+                                          MaterialStateProperty.all<Color>(
+                                              customViolet),
                                           shape: MaterialStateProperty.all<
-                                                  RoundedRectangleBorder>(
+                                              RoundedRectangleBorder>(
                                               RoundedRectangleBorder(
                                                   borderRadius:
-                                                      BorderRadius.circular(18.0),
+                                                  BorderRadius.circular(18.0),
                                                   side: BorderSide(color: customViolet)))),
                                       onPressed: () {
                                         displayConfigDialog(context);
                                       }),
                                 ],
                               ),
+
                               TextButton(
                                   onPressed: () {
                                     cubit.logOut(context);
@@ -497,6 +553,14 @@ class MainScreen extends StatelessWidget {
                     style: TextStyle(fontSize: 20),
                   ),
                   actions: [
+                    Padding(
+                      padding: const EdgeInsets.all(2.0),
+                      child: IconButton(
+                          onPressed: () {
+                            navigateAndPush(context, ScheduleScreen());
+                          },
+                          icon: Icon(Icons.schedule)),
+                    ),
                     Padding(
                       padding: const EdgeInsets.all(2.0),
                       child: IconButton(
@@ -779,6 +843,7 @@ class MainScreen extends StatelessWidget {
       },
     ).then((value) {
       notificationData = null;
+      // ignore: invalid_use_of_protected_member
       cubit.emit(ChangeDeviceStatus());
     });
   }

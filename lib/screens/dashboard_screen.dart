@@ -540,6 +540,7 @@ class DashBoardScreen extends StatelessWidget {
                               Expanded(
                                 flex: 2,
                                 child: ListView.separated(
+                                  scrollDirection: Axis.horizontal,
                                   itemCount: cubit.ledState.length,
                                   separatorBuilder: (_, __) => SizedBox(
                                     width: 10,
@@ -557,28 +558,27 @@ class DashBoardScreen extends StatelessWidget {
                                         height: 5,
                                       ),
                                       TextButton(
-                                          child: Text(
-                                              cubit.ledState[i] ? "on" : "off ",
+                                          child: Text(cubit.ledState[i].geText,
                                               style: TextStyle(
-                                                  color: cubit.ledLoadSetState[i]
-                                                      ? Colors.blue
-                                                      : (cubit.ledState[i]
-                                                          ? Colors.green
-                                                          : Colors.red),
+                                                  color: cubit
+                                                      .ledState[i].getColor,
                                                   fontSize: 17)),
                                           style: ButtonStyle(
-                                              padding: MaterialStateProperty.all<EdgeInsets>(
-                                                  EdgeInsets.all(15)),
+                                              padding:
+                                                  MaterialStateProperty.all<EdgeInsets>(
+                                                      EdgeInsets.all(15)),
                                               foregroundColor:
                                                   MaterialStateProperty.all<Color>(
                                                       customViolet),
-                                              shape: MaterialStateProperty.all<RoundedRectangleBorder>(
+                                              shape: MaterialStateProperty.all<
+                                                      RoundedRectangleBorder>(
                                                   RoundedRectangleBorder(
-                                                      borderRadius: BorderRadius.circular(18.0),
-                                                      side: BorderSide(color: cubit.ledLoadSetState[i] ? Colors.blue : (cubit.ledState[i] ? Colors.green : Colors.red))))),
+                                                      borderRadius:
+                                                          BorderRadius.circular(18.0),
+                                                      side: BorderSide(color: cubit.ledState[i].getColor)))),
                                           onPressed: () {
                                             if (cubit.isEspConnected) {
-                                              cubit.ledStatus(0);
+                                              cubit.ledStatus(i);
                                             } else {
                                               errorToast('No Device connected');
                                             }
@@ -605,11 +605,11 @@ class DashBoardScreen extends StatelessWidget {
       isHeater = false;
       i -= cubit.heatersBoolList.length;
     }
-    List<bool> state = isHeater ? cubit.heatersBoolList : cubit.fansBoolList;
-    List<bool> load =
-        isHeater ? cubit.heatersLoadBoolList : cubit.fansLoadBoolList;
+    List<DeviceState> state =
+        isHeater ? cubit.heatersBoolList : cubit.fansBoolList;
     List<bool> auto =
         isHeater ? cubit.heatersAutoBoolList : cubit.fansAutoBoolList;
+
     return Padding(
       padding: const EdgeInsets.all(8.0),
       child: Row(
@@ -628,11 +628,7 @@ class DashBoardScreen extends StatelessWidget {
               ),
               CircleAvatar(
                 radius: 25,
-                backgroundColor: load[i]
-                    ? Colors.blue.withOpacity(0.4)
-                    : (state[i]
-                        ? Colors.green.withOpacity(0.4)
-                        : Colors.red.withOpacity(0.4)),
+                backgroundColor: state[i].getColor.withOpacity(0.2),
                 child: IconButton(
                     iconSize: 35,
                     onPressed: () {
@@ -643,10 +639,10 @@ class DashBoardScreen extends StatelessWidget {
                       }
                     },
                     icon: Icon(
-                      state[i] ? Icons.flash_on : Icons.flash_off,
-                      color: load[i]
-                          ? Colors.blue
-                          : (state[i] ? Colors.green : Colors.red),
+                      state[i] == DeviceState.on
+                          ? Icons.flash_on
+                          : Icons.flash_off,
+                      color: state[i].getColor,
                     )),
               ),
               SizedBox(

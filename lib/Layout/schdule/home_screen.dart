@@ -5,7 +5,6 @@ import 'package:table_calendar/table_calendar.dart';
 import '../../cubit/schedule_cubit.dart';
 import '../../cubit/states.dart';
 import '../../model/modules/event_data.dart';
-import '../../reusable/reusable_functions.dart';
 import 'bottom_sheet.dart';
 
 class ScheduleScreen extends StatefulWidget {
@@ -250,151 +249,106 @@ class _HomeScreenState extends State<ScheduleScreen> {
                     String formattedStart = event.startTime.format(context);
                     String formattedEnd = event.endTime.format(context);
 
-                    return Dismissible(
-                      background: Container(
-                        color: Colors.red,
-                        child: const Icon(
-                          Icons.delete_outlined,
-                          color: Colors.white,
-                          size: 40,
-                        ),
-                      ),
-                      key: UniqueKey(),
-                      confirmDismiss: (_) async {
-                        if (event.state == EventState.running) {
-                          errorToast("Task is running");
-                          return Future.value(false);
-                        }
-                        return (await showDialog<bool?>(
+                    return Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 10),
+                      child: ListTile(
+                        onTap: () {
+                          if (event.state == EventState.waiting) {
+                            showModalBottomSheet(
                               context: context,
-                              builder: (context) => AlertDialog(
-                                title: const Text("Warning"),
-                                content: const Text("Delete the Task ?"),
-                                actions: <Widget>[
-                                  TextButton(
-                                    onPressed: () =>
-                                        Navigator.of(context).pop(false),
-                                    child: const Text("NO"),
-                                  ),
-                                  TextButton(
-                                    onPressed: () =>
-                                        Navigator.of(context).pop(true),
-                                    child: const Text("YES"),
-                                  ),
-                                ],
-                              ),
-                            )) ??
-                            false;
-                      },
-                      onDismissed: (_) {
-                        cubit.deleteTask(index: index, id: event.id);
-                        ScaffoldMessenger.of(context)
-                            .showSnackBar(const SnackBar(
-                          content: Text('Deleted successfully'),
-                          duration: Duration(seconds: 1),
-                        ));
-                      },
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 10),
-                        child: ListTile(
-                          onTap: () {
-                            if (event.state == EventState.waiting) {
-                              showModalBottomSheet(
-                                context: context,
-                                barrierColor: Colors.white.withOpacity(0.8),
-                                elevation: 20,
-                                isScrollControlled: true,
-                                //constraints: const BoxConstraints(maxHeight: 650),
-                                backgroundColor: Colors.white,
-                                builder: (context) => BottomSheetLayout(
-                                    event.day, true, index, event),
-                              );
-                            }
-                          },
-                          isThreeLine: true,
-                          leading: CircleAvatar(
-                            backgroundColor: {
-                              EventState.running: Colors.green[200],
-                              EventState.waiting: Colors.white.withOpacity(0.8),
-                              EventState.done: Colors.grey.withOpacity(0.5)
-                            }[event.state],
-                            child: Text("${index + 1}"),
-                          ),
-                          title: Text(event.device ?? ""),
-                          subtitle: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                  "Start at $formattedStart End at $formattedEnd"),
-                              Row(
-                                children: [
-                                  const Text("Duration : "),
-                                  Text(
-                                    cubit.minutesFormatted(
-                                        cubit.differentTimeMinutes(
-                                            event.startTime, event.endTime)),
-                                    style: const TextStyle(
-                                        color: Colors.green,
-                                        fontWeight: FontWeight.bold,
-                                        fontSize: 15),
-                                  ),
-                                ],
-                              ),
-                              event.state == EventState.running
-                                  ? Row(
-                                      children: [
-                                        const Text("End in "),
-                                        Text(
-                                          cubit.minutesFormatted(
-                                              cubit.differentTimeMinutes(
-                                                  TimeOfDay.now(),
-                                                  event.endTime)),
-                                          style: const TextStyle(
-                                            color: Colors.green,
-                                            fontWeight: FontWeight.bold,
-                                          ),
+                              barrierColor: Colors.white.withOpacity(0.8),
+                              elevation: 20,
+                              isScrollControlled: true,
+                              //constraints: const BoxConstraints(maxHeight: 650),
+                              backgroundColor: Colors.white,
+                              builder: (context) => BottomSheetLayout(
+                                  event.day, true, index, event),
+                            );
+                          }
+                        },
+                        isThreeLine: true,
+                        leading: CircleAvatar(
+                          backgroundColor: {
+                            EventState.running: Colors.green[200],
+                            EventState.waiting: Colors.white.withOpacity(0.8),
+                            EventState.done: Colors.grey.withOpacity(0.5)
+                          }[event.state],
+                          child: Text("${index + 1}"),
+                        ),
+                        title: Text(event.device ?? ""),
+                        subtitle: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                                "Start at $formattedStart End at $formattedEnd"),
+                            Row(
+                              children: [
+                                const Text("Duration : "),
+                                Text(
+                                  cubit.minutesFormatted(
+                                      cubit.differentTimeMinutes(
+                                          event.startTime, event.endTime)),
+                                  style: const TextStyle(
+                                      color: Colors.green,
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 15),
+                                ),
+                              ],
+                            ),
+                            event.state == EventState.running
+                                ? Row(
+                                    children: [
+                                      const Text("End in "),
+                                      Text(
+                                        cubit.minutesFormatted(
+                                            cubit.differentTimeMinutes(
+                                                TimeOfDay.now(),
+                                                event.endTime)),
+                                        style: const TextStyle(
+                                          color: Colors.green,
+                                          fontWeight: FontWeight.bold,
                                         ),
-                                      ],
-                                    )
-                                  : Container(),
-                              event.state == EventState.waiting &&
-                                      isSameDay(now, event.day)
-                                  ? Row(
-                                      children: [
-                                        const Text("Start in : "),
-                                        Text(
-                                          cubit.minutesFormatted(
-                                              cubit.differentTimeMinutes(
-                                                  TimeOfDay.now(),
-                                                  event.startTime)),
-                                          style: const TextStyle(
-                                            color: Colors.green,
-                                            fontWeight: FontWeight.bold,
-                                          ),
+                                      ),
+                                    ],
+                                  )
+                                : Container(),
+                            event.state == EventState.waiting &&
+                                    isSameDay(now, event.day)
+                                ? Row(
+                                    children: [
+                                      const Text("Start in : "),
+                                      Text(
+                                        cubit.minutesFormatted(
+                                            cubit.differentTimeMinutes(
+                                                TimeOfDay.now(),
+                                                event.startTime)),
+                                        style: const TextStyle(
+                                          color: Colors.green,
+                                          fontWeight: FontWeight.bold,
                                         ),
-                                      ],
-                                    )
-                                  : Container(),
-                              event.state == EventState.done &&
-                                      isSameDay(now, event.day)
-                                  ? Row(
-                                      children: [
-                                        const Text("Ended from : "),
-                                        Text(
-                                          cubit.minutesFormatted(
-                                              cubit.differentTimeMinutes(
-                                                  event.endTime,
-                                                  TimeOfDay.now())),
-                                          style: const TextStyle(
-                                            color: Colors.green,
-                                            fontWeight: FontWeight.bold,
-                                          ),
+                                      ),
+                                    ],
+                                  )
+                                : Container(),
+                            event.state == EventState.done &&
+                                    isSameDay(now, event.day)
+                                ? Row(
+                                    children: [
+                                      const Text("Ended from : "),
+                                      Text(
+                                        cubit.minutesFormatted(
+                                            cubit.differentTimeMinutes(
+                                                event.endTime,
+                                                TimeOfDay.now())),
+                                        style: const TextStyle(
+                                          color: Colors.green,
+                                          fontWeight: FontWeight.bold,
                                         ),
-                                      ],
-                                    )
-                                  : Container(),
-                            ],
-                          ),
+                                      ),
+                                    ],
+                                  )
+                                : Container(),
+                          ],
                         ),
                       ),
                     );

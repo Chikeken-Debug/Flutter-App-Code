@@ -24,6 +24,7 @@ Future<void> main() async {
 
   final prefs = await SharedPreferences.getInstance();
   bool? rememberMe = prefs.getBool("rememberMe");
+  // rememberMe = true;
 
   String? notificationData = prefs.getString("notificationInfo");
 

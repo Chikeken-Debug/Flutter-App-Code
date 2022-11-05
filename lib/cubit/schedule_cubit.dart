@@ -21,9 +21,11 @@ class ScheduleCubit extends Cubit<AppStates> {
     DataSnapshot snapshot =
         await fireBase.child(AppCubit.uId).child("Schedule").get();
     dynamic data = (snapshot.value);
-    data.forEach((key, value) {
-      eventsData.add(EventData(value, key, this));
-    });
+    if (data != null) {
+      data.forEach((key, value) {
+        eventsData.add(EventData(value, key, this));
+      });
+    }
 
     emit(ScheduleAppReadyState());
   }
@@ -52,7 +54,13 @@ class ScheduleCubit extends Cubit<AppStates> {
     String id = ((description ?? "") + formattedDate + formattedStart);
     eventsData.add(EventData(rowData, id, this));
     print("here");
-    await fireBase.child(AppCubit.uId).child("Schedule").child(id).set(rowData);
+    await fireBase
+        .child(AppCubit.uId)
+        .child("Schedule")
+        .child(formattedDate)
+        .child("control")
+        .child(id)
+        .set(rowData);
     Navigator.pop(context);
 
     emit(AddTaskState());
@@ -80,19 +88,13 @@ class ScheduleCubit extends Cubit<AppStates> {
     await fireBase
         .child(AppCubit.uId)
         .child("Schedule")
+        .child(formattedDate)
+        .child("control")
         .child(id)
         .update(rowData);
 
     eventsData[index] = EventData(rowData, id, this);
     Navigator.pop(context);
-    emit(AddTaskState());
-  }
-
-  Future<void> deleteTask(
-      {required int index, required String id, String? description}) async {
-    eventsData.removeAt(index);
-    await fireBase.child(AppCubit.uId).child("Schedule").child(id).remove();
-
     emit(AddTaskState());
   }
 

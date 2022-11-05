@@ -9,7 +9,6 @@ import 'package:csv/csv.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -30,6 +29,7 @@ class AppCubit extends Cubit<AppStates> {
   final dataBase = FirebaseDatabase.instance.ref(); // real time firebase object
   // ignore: prefer_typing_uninitialized_variables
   var listener;
+  Map<String, dynamic> settingData = {};
 
   // variables area
 
@@ -43,14 +43,11 @@ class AppCubit extends Cubit<AppStates> {
   bool networkConnection = true;
   bool timerListener = false;
   // devices variables
-  List<bool> heatersBoolList = [];
-  List<bool> heatersLoadBoolList = [];
+  List<DeviceState> heatersBoolList = [];
   List<bool> heatersAutoBoolList = [];
-  List<bool> fansBoolList = [];
-  List<bool> fansLoadBoolList = [];
+  List<DeviceState> fansBoolList = [];
   List<bool> fansAutoBoolList = [];
-  List<bool> ledLoadSetState = [];
-  List<bool> ledState = [];
+  List<DeviceState> ledState = [];
   String espTime = "";
   bool isEspConnected = false;
   List<double> tempReading = [];
@@ -89,18 +86,22 @@ class AppCubit extends Cubit<AppStates> {
   /// data reading
   void checkKeepAlive(int allState) async {
     print("checkKeepAlive");
+    print((int.parse(delayController.text) + 1));
     if (allState == 1 && timerListener == false) {
       timerListener = true;
       isEspConnected = true;
-      Timer.periodic(Duration(seconds: 20), (Timer t) {
+      // return;
+      Timer.periodic(Duration(minutes: int.parse(delayController.text) + 1),
+          (Timer t) {
         if (uId == "") {
           t.cancel();
           return;
         }
         dataBase.child(uId).get().then((value) {
-          int currentKeepAlive = value.child('keepAlive').value! as int;
-          isEspConnected = true;
-          //  (currentKeepAlive != lastKeepAliveValue);
+          int currentKeepAlive =
+              value.child('Time').child("Minute").value! as int;
+          print("currentKeepAlive $currentKeepAlive");
+          isEspConnected = (currentKeepAlive != lastKeepAliveValue);
           lastKeepAliveValue = currentKeepAlive;
           emit(KeepAliveChecked());
           if (!isEspConnected) {
@@ -120,37 +121,36 @@ class AppCubit extends Cubit<AppStates> {
     emit(GetDataLoading());
     dataBase.child(uId).once().then((snap) {
       dynamic data = (snap.snapshot.value);
-      lastKeepAliveValue = data['keepAlive'];
-      checkKeepAlive(1);
 
-      tempReading = objectsToList(data['Temp'].values.toList(), 1);
-      humReading = objectsToList(data['Hum'].values.toList(), 1);
+      tempReading = objectsToList(data['Temp']?.values?.toList(), 1);
+      humReading = objectsToList(data['Hum']?.values?.toList(), 1);
       airQuality = data['airQuality'].toDouble();
       airQualityText = airRatioToText(airQuality.round());
       Map tempEspTime = data['Time'];
       espTime =
           "${tempEspTime['Hour']}:${tempEspTime['Minute']}:${tempEspTime['Seconds']}";
+      lastKeepAliveValue = tempEspTime['Minute'] - 1;
+
+      settingData = Map<String, dynamic>.from(data['config'] ?? {});
 
       dynamic devicesData = data['states']['heater'];
       heatersBoolList = [];
       for (int i = 0; i < devicesData.length; i++) {
-        heatersBoolList.add(devicesData.values.toList()[i] == "ON");
+        heatersBoolList.add(texToState[devicesData.values.toList()[i]]!);
       }
-      heatersLoadBoolList = List.filled(heatersBoolList.length, false);
 
       devicesData = data['states']['leds'];
+      print(devicesData);
       ledState = [];
       for (int i = 0; i < devicesData.length; i++) {
-        ledState.add(devicesData.values.toList()[i] == "ON");
+        ledState.add(texToState[devicesData.values.toList()[i]]!);
       }
-      ledLoadSetState = List.filled(ledState.length, false);
 
       devicesData = data['states']['fans'];
       fansBoolList = [];
       for (int i = 0; i < devicesData.length; i++) {
-        fansBoolList.add(devicesData.values.toList()[i] == "ON");
+        fansBoolList.add(texToState[devicesData.values.toList()[i]]!);
       }
-      fansLoadBoolList = List.filled(fansBoolList.length, false);
       devicesData = data['controls']['fans'];
       fansAutoBoolList = [];
       devicesData.forEach((key, value) {
@@ -171,6 +171,8 @@ class AppCubit extends Cubit<AppStates> {
       maxVentController.text = '${data['valueRanges']['vent'].split(',')[1]}';
       minVentController.text = '${data['valueRanges']['vent'].split(',')[0]}';
       delayController.text = "${data['valueRanges']['delay']}";
+      checkKeepAlive(1);
+
       historicalDelayController.text = "${data['valueRanges']['timeToWait']}";
       currentUserName = data['RFID']['data'].split(',')[0];
       currentUserImageUrl = driveToImage(data['RFID']['data'].split(',')[1]);
@@ -194,41 +196,38 @@ class AppCubit extends Cubit<AppStates> {
           {
             dynamic devicesData = data['heater'];
             for (int i = 0; i < devicesData.length; i++) {
+              DeviceState newState =
+                  texToState[devicesData.values.toList()[i]]!;
               if (i + 1 > heatersBoolList.length) {
-                heatersLoadBoolList.add(false);
-                heatersBoolList.add(false);
+                heatersBoolList.add(newState);
                 heatersAutoBoolList.add(false);
                 continue;
-              }
-              bool newState = devicesData.values.toList()[i] == "ON";
-              if (newState != heatersBoolList[i]) {
-                heatersLoadBoolList[i] = false;
               }
               heatersBoolList[i] = newState;
             }
 
             devicesData = data['leds'];
             for (int i = 0; i < devicesData.length; i++) {
+              DeviceState newState =
+                  texToState[devicesData.values.toList()[i]]!;
               if (i + 1 > ledState.length) {
-                ledState.add(false);
-                ledLoadSetState.add(false);
+                ledState.add(newState);
                 continue;
               }
-              bool newState = devicesData.values.toList()[i] == "ON";
-              if (newState != ledState[i]) ledLoadSetState[i] = false;
               ledState[i] = newState;
             }
 
             devicesData = data['fans'];
+
             for (int i = 0; i < devicesData.length; i++) {
+              DeviceState newState =
+                  texToState[devicesData.values.toList()[i]]!;
+
               if (i + 1 > fansBoolList.length) {
-                fansBoolList.add(false);
-                fansLoadBoolList.add(false);
+                fansBoolList.add(newState);
                 fansAutoBoolList.add(false);
                 continue;
               }
-              bool newState = devicesData.values.toList()[i] == "ON";
-              if (newState != fansBoolList[i]) fansLoadBoolList[i] = false;
               fansBoolList[i] = newState;
             }
             break;
@@ -246,6 +245,9 @@ class AppCubit extends Cubit<AppStates> {
         case 'Time':
           {
             espTime = "${data['Hour']}:${data['Minute']}:${data['Seconds']}";
+            lastKeepAliveValue = -1;
+            isEspConnected = true;
+            checkKeepAlive(1);
             break;
           }
         case "airQuality":
@@ -254,13 +256,7 @@ class AppCubit extends Cubit<AppStates> {
             airQualityText = airRatioToText(airQuality.round());
             break;
           }
-        case "keepAlive":
-          {
-            lastKeepAliveValue = -1;
-            isEspConnected = true;
-            checkKeepAlive(1);
-            break;
-          }
+
         case "RFID":
           {
             currentUserName = data['data'].split(',')[0];
@@ -293,7 +289,8 @@ class AppCubit extends Cubit<AppStates> {
     return "Died";
   }
 
-  List<double> objectsToList(List oldList, int ratio) {
+  List<double> objectsToList(List? oldList, int ratio) {
+    if (oldList == null) return [];
     if (ratio == -1) {
       ratio = 2 * int.parse(maxTempController.text) -
           int.parse(minTempController.text);
@@ -313,23 +310,34 @@ class AppCubit extends Cubit<AppStates> {
   /// firebase database functions
 
   void deviceStatus(bool isHeater, int index) {
-    bool lastState =
+    bool isAuto =
         isHeater ? heatersAutoBoolList[index] : fansAutoBoolList[index];
-    if (!lastState) {
-      bool lastState = isHeater ? heatersBoolList[index] : fansBoolList[index];
+
+    if (!isAuto) {
+      DeviceState lastState =
+          isHeater ? heatersBoolList[index] : fansBoolList[index];
+      String state;
+      if (lastState == DeviceState.on) {
+        state = "OFF";
+      } else if (lastState == DeviceState.off) {
+        state = "ON";
+      } else {
+        errorToast("Can't control the device now");
+        return;
+      }
+      print(state);
       dataBase
           .child(uId)
           .child('controls')
           .child(isHeater ? "heater" : "fans")
           .update({
-        (isHeater ? "heater${index + 1}" : "fan${index + 1}"):
-            !lastState ? "ON" : "OFF"
+        (isHeater ? "heater${index + 1}" : "fan${index + 1}"): state
       }).then((value) {
         emit(ChangeDeviceStatus());
         if (isHeater) {
-          heatersLoadBoolList[index] = true;
+          heatersBoolList[index] = DeviceState.wait;
         } else {
-          fansLoadBoolList[index] = true;
+          fansBoolList[index] = DeviceState.wait;
         }
       }).catchError((err) {
         errorToast("an error happened");
@@ -362,10 +370,22 @@ class AppCubit extends Cubit<AppStates> {
   }
 
   void ledStatus(int index) {
-    ledLoadSetState[index] = true;
-
-    dataBase.child(uId).child('controls').child("leds").update(
-        {"led${index + 1}": !ledState[index] ? 'ON' : 'OFF'}).then((value) {
+    String state;
+    if (ledState[index] == DeviceState.on) {
+      state = "OFF";
+    } else if (ledState[index] == DeviceState.off) {
+      state = "ON";
+    } else {
+      errorToast("Can't control the device now");
+      return;
+    }
+    ledState[index] = DeviceState.wait;
+    print(state);
+    dataBase
+        .child(uId)
+        .child('controls')
+        .child("leds")
+        .update({"led${index + 1}": state}).then((value) {
       emit(ChangeDeviceStatus());
     }).catchError((err) {
       errorToast("an error happened");
@@ -374,6 +394,7 @@ class AppCubit extends Cubit<AppStates> {
   }
 
   void sendValuesRanges() {
+    dataBase.child(uId).child("config").update(settingData);
     dataBase.child(uId).child("valueRanges").update({
       "delay": delayController.text,
       "temp": "${minTempController.text},${maxTempController.text}",
@@ -670,7 +691,7 @@ class AppCubit extends Cubit<AppStates> {
     final prefs = await SharedPreferences.getInstance();
     if (checkRemember == true) {
       uId = prefs.getString("uId")!;
-      uId = "mon3m_0";
+      // uId = "IdRhj6uMQFRwDxpS831JRwSvtC03_1";
       readFireDataOnce();
       readFireDataListener();
       currentPage = 0;
@@ -804,3 +825,39 @@ class AppCubit extends Cubit<AppStates> {
     emit(MainDrawerValuesListState());
   }
 }
+
+enum DeviceState { on, off, rst, wait }
+
+extension Gets on DeviceState {
+  Color get getColor {
+    switch (this) {
+      case DeviceState.on:
+        return Colors.green;
+      case DeviceState.off:
+        return Colors.red;
+      case DeviceState.rst:
+        return Colors.yellow;
+      case DeviceState.wait:
+        return Colors.blue;
+    }
+  }
+
+  String get geText {
+    switch (this) {
+      case DeviceState.on:
+        return "ON";
+      case DeviceState.off:
+        return "OFF";
+      case DeviceState.rst:
+        return "Reset";
+      case DeviceState.wait:
+        return "Wait";
+    }
+  }
+}
+
+Map<String, DeviceState> texToState = {
+  "ON": DeviceState.on,
+  "OFF": DeviceState.off,
+  "RST": DeviceState.rst,
+};

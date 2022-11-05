@@ -7,6 +7,7 @@ import 'package:animated_widgets/widgets/shake_animated_widget.dart';
 import 'package:bird_system/Layout/configuration_screen.dart';
 import 'package:bird_system/Layout/rfid/card_screen.dart';
 import 'package:bird_system/Layout/schdule/home_screen.dart';
+import 'package:bird_system/Layout/setting_config.dart';
 import 'package:bird_system/cubit/app_cubit.dart';
 import 'package:bird_system/cubit/states.dart';
 import 'package:bird_system/reusable/reusable_functions.dart';
@@ -24,7 +25,6 @@ import 'package:shared_preferences/shared_preferences.dart'; // import this
 class MainScreen extends StatelessWidget {
   var scaffoldKey = GlobalKey<ScaffoldState>();
 
-  var formKey = GlobalKey<FormState>();
 
   Map<String, dynamic>? notificationData;
 
@@ -192,214 +192,6 @@ class MainScreen extends StatelessWidget {
                                       ),
                                       isExpanded: cubit.mainDrawerFarmsListBool,
                                     ),
-                                    ExpansionPanel(
-                                      headerBuilder: (BuildContext context,
-                                          bool isExpanded) {
-                                        return ListTile(
-                                          title: Text("Values range"),
-                                        );
-                                      },
-                                      body: Padding(
-                                        padding: const EdgeInsets.all(10.0),
-                                        child: Form(
-                                          key: formKey,
-                                          child: SizedBox(
-                                            height: 150,
-                                            child: SingleChildScrollView(
-                                              child: Column(
-                                                children: [
-                                                  Row(
-                                                    children: [
-                                                      Expanded(
-                                                        child: TextFormField(
-                                                            controller: cubit
-                                                                .minTempController,
-                                                            keyboardType:
-                                                                TextInputType
-                                                                    .number,
-                                                            validator: (value) {
-                                                              if (value!
-                                                                  .isEmpty) {
-                                                                return 'this field cannot be empty';
-                                                              } else {
-                                                                return null;
-                                                              }
-                                                            },
-                                                            decoration:
-                                                                InputDecoration(
-                                                              labelText:
-                                                                  "min temp",
-                                                            )),
-                                                      ),
-                                                      SizedBox(
-                                                        width: 25,
-                                                      ),
-                                                      Expanded(
-                                                        child: TextFormField(
-                                                            controller: cubit
-                                                                .maxTempController,
-                                                            keyboardType:
-                                                                TextInputType
-                                                                    .number,
-                                                            validator: (value) {
-                                                              if (value!
-                                                                  .isEmpty) {
-                                                                return 'this field cannot be empty';
-                                                              } else {
-                                                                return null;
-                                                              }
-                                                            },
-                                                            decoration:
-                                                                InputDecoration(
-                                                              labelText:
-                                                                  "max temp",
-                                                            )),
-                                                      ),
-                                                    ],
-                                                  ),
-                                                  Row(
-                                                    children: [
-                                                      Expanded(
-                                                        child: TextFormField(
-                                                            controller: cubit
-                                                                .minVentController,
-                                                            keyboardType:
-                                                                TextInputType
-                                                                    .number,
-                                                            validator: (value) {
-                                                              if (value!
-                                                                  .isEmpty) {
-                                                                return 'this field cannot be empty';
-                                                              } else {
-                                                                return null;
-                                                              }
-                                                            },
-                                                            decoration:
-                                                                InputDecoration(
-                                                              labelText:
-                                                                  "min vent",
-                                                            )),
-                                                      ),
-                                                      SizedBox(
-                                                        width: 25,
-                                                      ),
-                                                      Expanded(
-                                                        child: TextFormField(
-                                                            controller: cubit
-                                                                .maxVentController,
-                                                            keyboardType:
-                                                                TextInputType
-                                                                    .number,
-                                                            validator: (value) {
-                                                              if (value!
-                                                                  .isEmpty) {
-                                                                return 'this field cannot be empty';
-                                                              } else {
-                                                                return null;
-                                                              }
-                                                            },
-                                                            decoration:
-                                                                InputDecoration(
-                                                              labelText:
-                                                                  "max vent",
-                                                            )),
-                                                      ),
-                                                    ],
-                                                  ),
-                                                  Row(
-                                                    children: [
-                                                      Expanded(
-                                                        child: TextFormField(
-                                                            controller: cubit
-                                                                .delayController,
-                                                            keyboardType:
-                                                                TextInputType
-                                                                    .number,
-                                                            validator: (value) {
-                                                              if (value!
-                                                                  .isEmpty) {
-                                                                return 'this field cannot be empty';
-                                                              } else {
-                                                                return null;
-                                                              }
-                                                            },
-                                                            decoration:
-                                                                InputDecoration(
-                                                              hintText:
-                                                                  "Delay in Minutes",
-                                                              labelText:
-                                                                  "Delay",
-                                                            )),
-                                                      ),
-                                                      SizedBox(
-                                                        width: 25,
-                                                      ),
-                                                      Expanded(
-                                                        child: TextFormField(
-                                                            controller: cubit
-                                                                .historicalDelayController,
-                                                            keyboardType:
-                                                                TextInputType
-                                                                    .number,
-                                                            validator: (value) {
-                                                              if (value!
-                                                                  .isEmpty) {
-                                                                return 'this field cannot be empty';
-                                                              } else {
-                                                                return null;
-                                                              }
-                                                            },
-                                                            decoration:
-                                                                InputDecoration(
-                                                              labelText:
-                                                                  "backup data minutes",
-                                                            )),
-                                                      ),
-                                                    ],
-                                                  ),
-                                                  SizedBox(
-                                                    height: 10,
-                                                  ),
-                                                  SizedBox(
-                                                    width: double.infinity,
-                                                    child: ElevatedButton(
-                                                      onPressed: () {
-                                                        if (formKey
-                                                            .currentState!
-                                                            .validate()) {
-                                                          cubit
-                                                              .sendValuesRanges();
-                                                        }
-                                                        // send data
-                                                      },
-                                                      child: Text('Send values',
-                                                          style: TextStyle(
-                                                              fontSize: 18.0,
-                                                              color: Colors
-                                                                  .white)),
-                                                      style: ElevatedButton
-                                                          .styleFrom(
-                                                        backgroundColor: customViolet,
-                                                        padding:
-                                                            EdgeInsets.all(15),
-                                                        shape:
-                                                            RoundedRectangleBorder(
-                                                          borderRadius:
-                                                              BorderRadius.circular(
-                                                                  10), // <-- Radius
-                                                        ),
-                                                      ),
-                                                    ),
-                                                  )
-                                                ],
-                                              ),
-                                            ),
-                                          ),
-                                        ),
-                                      ),
-                                      isExpanded:
-                                          cubit.mainDrawerValuesListBool,
-                                    ),
                                   ],
                                 ),
                               ),
@@ -561,13 +353,21 @@ class MainScreen extends StatelessWidget {
                           },
                           icon: Icon(Icons.schedule)),
                     ),
-                    Padding(
+                     Padding(
                       padding: const EdgeInsets.all(2.0),
                       child: IconButton(
                           onPressed: () {
                             navigateAndPush(context, CardScreen());
                           },
                           icon: Icon(Icons.credit_card_outlined)),
+                    ),
+                     Padding(
+                      padding: const EdgeInsets.all(2.0),
+                      child: IconButton(
+                          onPressed: () {
+                            navigateAndPush(context, SettingConfig());
+                          },
+                          icon: Icon(Icons.settings)),
                     )
                   ],
                   leading: InkWell(

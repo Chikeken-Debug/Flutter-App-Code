@@ -32,16 +32,8 @@ class DataBaseDataRepository {
   Map<String, dynamic> firebaseInitialData(String newId, int userCount) {
     return {
       "CodeVersion": "1.0.2.1",
-      "controls": {
-        "leds": {"led1": "ON"},
-        "heater": {"heater1Auto": "ON", "heater1": "ON"},
-        "fans": {"fan1Auto": "ON", "fan1": "ON"},
-      },
-      "states": {
-        "leds": {"led1": "ON"},
-        "heater": {"heater1": "ON"},
-        "fans": {"fan1": "ON"}
-      },
+      "controls": {},
+      "states": {},
       "Temp": {"temp1": 0},
       "Hum": {"hum1": 0},
       "RFID": {"data": ",", "lastID": "NULL,notfound"},

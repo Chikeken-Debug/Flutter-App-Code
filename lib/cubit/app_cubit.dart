@@ -12,6 +12,7 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:collection/collection.dart';
 import '../model/repository/realtime_firebase.dart';
 import '../model/repository/web_sevices.dart';
 import 'states.dart';
@@ -43,16 +44,13 @@ class AppCubit extends Cubit<AppStates> {
   bool networkConnection = true;
   bool timerListener = false;
   // devices variables
-  List<DeviceState> heatersBoolList = [];
-  List<bool> heatersAutoBoolList = [];
-  List<DeviceState> fansBoolList = [];
-  List<bool> fansAutoBoolList = [];
-  List<DeviceState> ledState = [];
+  List<Device> devices = [];
+
   String espTime = "";
   bool isEspConnected = false;
   List<double> tempReading = [];
   List<double> humReading = [];
-  double airQuality = 0;
+  List<double> airQuality = [];
   String airQualityText = "---";
   var maxTempController = TextEditingController();
   var minTempController = TextEditingController();
@@ -90,7 +88,6 @@ class AppCubit extends Cubit<AppStates> {
     if (allState == 1 && timerListener == false) {
       timerListener = true;
       isEspConnected = true;
-      // return;
       Timer.periodic(Duration(minutes: int.parse(delayController.text) + 1),
           (Timer t) {
         if (uId == "") {
@@ -124,45 +121,25 @@ class AppCubit extends Cubit<AppStates> {
 
       tempReading = objectsToList(data['Temp']?.values?.toList(), 1);
       humReading = objectsToList(data['Hum']?.values?.toList(), 1);
-      airQuality = data['airQuality'].toDouble();
-      airQualityText = airRatioToText(airQuality.round());
+      airQuality = objectsToList(data['airQuality']?.values?.toList(), 1);
+      airQualityText = airRatioToText(airQuality.average.round());
       Map tempEspTime = data['Time'];
+      print(tempEspTime);
       espTime =
           "${tempEspTime['Hour']}:${tempEspTime['Minute']}:${tempEspTime['Seconds']}";
-      lastKeepAliveValue = tempEspTime['Minute'] - 1;
-
+      if (tempEspTime['Minute'] != "") {
+        lastKeepAliveValue = tempEspTime['Minute'] - 1;
+      }
       settingData = Map<String, dynamic>.from(data['config'] ?? {});
 
-      dynamic devicesData = data['states']['heater'];
-      heatersBoolList = [];
-      for (int i = 0; i < devicesData.length; i++) {
-        heatersBoolList.add(texToState[devicesData.values.toList()[i]]!);
-      }
-
-      devicesData = data['states']['leds'];
-      print(devicesData);
-      ledState = [];
-      for (int i = 0; i < devicesData.length; i++) {
-        ledState.add(texToState[devicesData.values.toList()[i]]!);
-      }
-
-      devicesData = data['states']['fans'];
-      fansBoolList = [];
-      for (int i = 0; i < devicesData.length; i++) {
-        fansBoolList.add(texToState[devicesData.values.toList()[i]]!);
-      }
-      devicesData = data['controls']['fans'];
-      fansAutoBoolList = [];
+      dynamic devicesData = data['states'] ?? {};
+      devices = [];
       devicesData.forEach((key, value) {
-        if (key.contains("Auto")) {
-          fansAutoBoolList.add(value == "ON");
-        }
-      });
-      devicesData = data['controls']['heater'];
-      heatersAutoBoolList = [];
-      devicesData.forEach((key, value) {
-        if (key.contains("Auto")) {
-          heatersAutoBoolList.add(value == "ON");
+        if (!key.contains("Auto")) {
+          devices.add(Device(
+              state: texToState[value]!,
+              name: key.replaceAll("_", " "),
+              isAuto: devicesData[key + "_Auto"] == "ON"));
         }
       });
 
@@ -189,47 +166,19 @@ class AppCubit extends Cubit<AppStates> {
     listener = dataBase.child(uId).onChildChanged.listen((event) {
       dynamic data = event.snapshot.value;
 
-      print(event.snapshot.key);
-      print(data);
       switch (event.snapshot.key) {
         case 'states':
           {
-            dynamic devicesData = data['heater'];
-            for (int i = 0; i < devicesData.length; i++) {
-              DeviceState newState =
-                  texToState[devicesData.values.toList()[i]]!;
-              if (i + 1 > heatersBoolList.length) {
-                heatersBoolList.add(newState);
-                heatersAutoBoolList.add(false);
-                continue;
+            // devices = [];
+
+            data.forEach((key, value) {
+              if (!key.contains("Auto")) {
+                devices.add(Device(
+                    state: texToState[value]!,
+                    name: key.replaceAll("_", " "),
+                    isAuto: data[key + "_Auto"] == "ON"));
               }
-              heatersBoolList[i] = newState;
-            }
-
-            devicesData = data['leds'];
-            for (int i = 0; i < devicesData.length; i++) {
-              DeviceState newState =
-                  texToState[devicesData.values.toList()[i]]!;
-              if (i + 1 > ledState.length) {
-                ledState.add(newState);
-                continue;
-              }
-              ledState[i] = newState;
-            }
-
-            devicesData = data['fans'];
-
-            for (int i = 0; i < devicesData.length; i++) {
-              DeviceState newState =
-                  texToState[devicesData.values.toList()[i]]!;
-
-              if (i + 1 > fansBoolList.length) {
-                fansBoolList.add(newState);
-                fansAutoBoolList.add(false);
-                continue;
-              }
-              fansBoolList[i] = newState;
-            }
+            });
             break;
           }
         case 'Hum':
@@ -252,8 +201,8 @@ class AppCubit extends Cubit<AppStates> {
           }
         case "airQuality":
           {
-            airQuality = data.toDouble();
-            airQualityText = airRatioToText(airQuality.round());
+            airQuality = objectsToList(data['airQuality']?.values?.toList(), 1);
+            airQualityText = airRatioToText(airQuality.average.round());
             break;
           }
 
@@ -309,13 +258,11 @@ class AppCubit extends Cubit<AppStates> {
 
   /// firebase database functions
 
-  void deviceStatus(bool isHeater, int index) {
-    bool isAuto =
-        isHeater ? heatersAutoBoolList[index] : fansAutoBoolList[index];
+  void deviceStatus(int index) {
+    bool isAuto = devices[index].isAuto;
 
     if (!isAuto) {
-      DeviceState lastState =
-          isHeater ? heatersBoolList[index] : fansBoolList[index];
+      DeviceState lastState = devices[index].state;
       String state;
       if (lastState == DeviceState.on) {
         state = "OFF";
@@ -326,19 +273,10 @@ class AppCubit extends Cubit<AppStates> {
         return;
       }
       print(state);
-      dataBase
-          .child(uId)
-          .child('controls')
-          .child(isHeater ? "heater" : "fans")
-          .update({
-        (isHeater ? "heater${index + 1}" : "fan${index + 1}"): state
-      }).then((value) {
+      dataBase.child(uId).child('controls').update(
+          {devices[index].name.replaceAll(" ", "_"): state}).then((value) {
         emit(ChangeDeviceStatus());
-        if (isHeater) {
-          heatersBoolList[index] = DeviceState.wait;
-        } else {
-          fansBoolList[index] = DeviceState.wait;
-        }
+        devices[index].state = DeviceState.wait;
       }).catchError((err) {
         errorToast("an error happened");
       });
@@ -347,51 +285,42 @@ class AppCubit extends Cubit<AppStates> {
     }
   }
 
-  void deviceAutoStatus(bool isHeater, int index) {
-    bool lastState =
-        isHeater ? heatersAutoBoolList[index] : fansAutoBoolList[index];
-    dataBase
-        .child(uId)
-        .child('controls')
-        .child(isHeater ? "heater" : "fans")
-        .update({
-      (isHeater ? "heater${index + 1}Auto" : "fan${index + 1}Auto"):
+  void deviceAutoStatus(int index) {
+    bool lastState = devices[index].isAuto;
+    dataBase.child(uId).child('states').update({
+      devices[index].name.replaceAll(" ", "_") + "_Auto":
           !lastState ? "ON" : "OFF"
     }).then((value) {
       emit(ChangeDeviceStatus());
-      if (isHeater) {
-        heatersAutoBoolList[index] = !heatersAutoBoolList[index];
-      } else {
-        fansAutoBoolList[index] = !fansAutoBoolList[index];
-      }
+      devices[index].isAuto = !devices[index].isAuto;
     }).catchError((err) {
       errorToast("an error happened");
     });
   }
 
-  void ledStatus(int index) {
-    String state;
-    if (ledState[index] == DeviceState.on) {
-      state = "OFF";
-    } else if (ledState[index] == DeviceState.off) {
-      state = "ON";
-    } else {
-      errorToast("Can't control the device now");
-      return;
-    }
-    ledState[index] = DeviceState.wait;
-    print(state);
-    dataBase
-        .child(uId)
-        .child('controls')
-        .child("leds")
-        .update({"led${index + 1}": state}).then((value) {
-      emit(ChangeDeviceStatus());
-    }).catchError((err) {
-      errorToast("an error happened");
-    });
-    emit(ChangeDeviceStatus());
-  }
+  // void ledStatus(int index) {
+  //   String state;
+  //   if (leds[index].state == DeviceState.on) {
+  //     state = "OFF";
+  //   } else if (leds[index].state == DeviceState.off) {
+  //     state = "ON";
+  //   } else {
+  //     errorToast("Can't control the device now");
+  //     return;
+  //   }
+  //   leds[index].state = DeviceState.wait;
+  //   print(state);
+  //   dataBase
+  //       .child(uId)
+  //       .child('controls')
+  //       .child("leds")
+  //       .update({"led${index + 1}": state}).then((value) {
+  //     emit(ChangeDeviceStatus());
+  //   }).catchError((err) {
+  //     errorToast("an error happened");
+  //   });
+  //   emit(ChangeDeviceStatus());
+  // }
 
   void sendValuesRanges() {
     dataBase.child(uId).child("config").update(settingData);
@@ -691,7 +620,6 @@ class AppCubit extends Cubit<AppStates> {
     final prefs = await SharedPreferences.getInstance();
     if (checkRemember == true) {
       uId = prefs.getString("uId")!;
-      // uId = "IdRhj6uMQFRwDxpS831JRwSvtC03_1";
       readFireDataOnce();
       readFireDataListener();
       currentPage = 0;
@@ -861,3 +789,11 @@ Map<String, DeviceState> texToState = {
   "OFF": DeviceState.off,
   "RST": DeviceState.rst,
 };
+
+class Device {
+  DeviceState state;
+  String name;
+  bool isAuto;
+
+  Device({required this.state, required this.name, required this.isAuto});
+}

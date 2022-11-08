@@ -437,7 +437,7 @@ class DashBoardScreen extends StatelessWidget {
                                       ],
                                       markerPointers: [
                                         LinearShapePointer(
-                                          value: cubit.airQuality,
+                                          value: cubit.airQuality.average,
                                           position: LinearElementPosition.cross,
                                           shapeType:
                                               LinearShapePointerType.triangle,
@@ -449,7 +449,7 @@ class DashBoardScreen extends StatelessWidget {
                                     child: Padding(
                                       padding: const EdgeInsets.all(8.0),
                                       child: Text(
-                                        "The Air is ${cubit.airQualityText} with ${cubit.airQuality.round()} ppm",
+                                        "The Air is ${cubit.airQualityText} with average ${cubit.airQuality.average.round()} ppm",
                                         style: TextStyle(
                                             fontSize: 18,
                                             fontWeight: FontWeight.bold),
@@ -468,7 +468,7 @@ class DashBoardScreen extends StatelessWidget {
                           vertical: 10.0, horizontal: 15),
                       child: Container(
                         width: double.infinity,
-                        height: 180,
+                        height: 360,
                         decoration: BoxDecoration(
                             color: Colors.white,
                             border: Border.all(
@@ -477,121 +477,119 @@ class DashBoardScreen extends StatelessWidget {
                             borderRadius:
                                 BorderRadius.all(Radius.circular(20))),
                         child: Padding(
-                          padding: const EdgeInsets.all(10),
+                          padding: const EdgeInsets.all(5),
                           child: Column(
                             children: [
                               Text(
-                                "Devices Status",
+                                "Devices",
                                 style: TextStyle(
                                     color: customViolet,
                                     fontSize: 18,
                                     fontWeight: FontWeight.bold),
                               ),
                               Expanded(
-                                child: ListView.separated(
-                                    scrollDirection: Axis.horizontal,
+                                child: GridView.builder(
+                                    // shrinkWrap: true,
+                                    // physics: NeverScrollableScrollPhysics(),
+                                    gridDelegate:
+                                        SliverGridDelegateWithFixedCrossAxisCount(
+                                            crossAxisCount: 3,
+                                            childAspectRatio: 0.75),
                                     itemBuilder: (context, index) {
                                       return deviceItemBuilder(index, cubit);
                                     },
-                                    separatorBuilder: (context, index) {
-                                      return SizedBox(
-                                        width: 20,
-                                      );
-                                    },
-                                    itemCount: cubit.fansBoolList.length +
-                                        cubit.heatersBoolList.length),
+                                    itemCount: cubit.devices.length),
                               ),
                             ],
                           ),
                         ),
                       ),
                     ),
-                    Padding(
-                      padding: const EdgeInsets.symmetric(
-                          vertical: 10.0, horizontal: 15),
-                      child: Container(
-                        width: double.infinity,
-                        height: 150,
-                        decoration: BoxDecoration(
-                            color: Colors.white,
-                            border: Border.all(
-                              color: customViolet,
-                            ),
-                            borderRadius:
-                                BorderRadius.all(Radius.circular(20))),
-                        child: Padding(
-                          padding: const EdgeInsets.all(10),
-                          child: Column(
-                            children: [
-                              Expanded(
-                                child: Center(
-                                  child: Text(
-                                    "Light Controls",
-                                    style: TextStyle(
-                                        color: customViolet,
-                                        fontSize: 18,
-                                        fontWeight: FontWeight.bold),
-                                  ),
-                                ),
-                              ),
-                              SizedBox(
-                                height: 10,
-                              ),
-                              Expanded(
-                                flex: 2,
-                                child: ListView.separated(
-                                  scrollDirection: Axis.horizontal,
-                                  itemCount: cubit.ledState.length,
-                                  separatorBuilder: (_, __) => SizedBox(
-                                    width: 10,
-                                  ),
-                                  itemBuilder: (context, i) => Column(
-                                    children: [
-                                      Text(
-                                        "Led ${i + 1}",
-                                        style: TextStyle(
-                                            color: customGrey,
-                                            fontSize: 14,
-                                            fontWeight: FontWeight.bold),
-                                      ),
-                                      SizedBox(
-                                        height: 5,
-                                      ),
-                                      TextButton(
-                                          child: Text(cubit.ledState[i].geText,
-                                              style: TextStyle(
-                                                  color: cubit
-                                                      .ledState[i].getColor,
-                                                  fontSize: 17)),
-                                          style: ButtonStyle(
-                                              padding:
-                                                  MaterialStateProperty.all<EdgeInsets>(
-                                                      EdgeInsets.all(15)),
-                                              foregroundColor:
-                                                  MaterialStateProperty.all<Color>(
-                                                      customViolet),
-                                              shape: MaterialStateProperty.all<
-                                                      RoundedRectangleBorder>(
-                                                  RoundedRectangleBorder(
-                                                      borderRadius:
-                                                          BorderRadius.circular(18.0),
-                                                      side: BorderSide(color: cubit.ledState[i].getColor)))),
-                                          onPressed: () {
-                                            if (cubit.isEspConnected) {
-                                              cubit.ledStatus(i);
-                                            } else {
-                                              errorToast('No Device connected');
-                                            }
-                                          }),
-                                    ],
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ),
+                    // Padding(
+                    //   padding: const EdgeInsets.symmetric(
+                    //       vertical: 10.0, horizontal: 15),
+                    //   child: Container(
+                    //     width: double.infinity,
+                    //     height: 150,
+                    //     decoration: BoxDecoration(
+                    //         color: Colors.white,
+                    //         border: Border.all(
+                    //           color: customViolet,
+                    //         ),
+                    //         borderRadius:
+                    //             BorderRadius.all(Radius.circular(20))),
+                    //     child: Padding(
+                    //       padding: const EdgeInsets.all(10),
+                    //       child: Column(
+                    //         children: [
+                    //           Expanded(
+                    //             child: Center(
+                    //               child: Text(
+                    //                 "Light Controls",
+                    //                 style: TextStyle(
+                    //                     color: customViolet,
+                    //                     fontSize: 18,
+                    //                     fontWeight: FontWeight.bold),
+                    //               ),
+                    //             ),
+                    //           ),
+                    //           SizedBox(
+                    //             height: 10,
+                    //           ),
+                    //           Expanded(
+                    //             flex: 2,
+                    //             child: ListView.separated(
+                    //               scrollDirection: Axis.horizontal,
+                    //               itemCount: cubit.leds.length,
+                    //               separatorBuilder: (_, __) => SizedBox(
+                    //                 width: 10,
+                    //               ),
+                    //               itemBuilder: (context, i) => Column(
+                    //                 children: [
+                    //                   Text(
+                    //                     "Led ${i + 1}",
+                    //                     style: TextStyle(
+                    //                         color: customGrey,
+                    //                         fontSize: 14,
+                    //                         fontWeight: FontWeight.bold),
+                    //                   ),
+                    //                   SizedBox(
+                    //                     height: 5,
+                    //                   ),
+                    //                   TextButton(
+                    //                       child: Text(cubit.leds[i].geText,
+                    //                           style: TextStyle(
+                    //                               color: cubit.leds[i].getColor,
+                    //                               fontSize: 17)),
+                    //                       style: ButtonStyle(
+                    //                           padding:
+                    //                               MaterialStateProperty.all<EdgeInsets>(
+                    //                                   EdgeInsets.all(15)),
+                    //                           foregroundColor:
+                    //                               MaterialStateProperty.all<Color>(
+                    //                                   customViolet),
+                    //                           shape: MaterialStateProperty.all<
+                    //                                   RoundedRectangleBorder>(
+                    //                               RoundedRectangleBorder(
+                    //                                   borderRadius:
+                    //                                       BorderRadius.circular(18.0),
+                    //                                   side: BorderSide(color: cubit.leds[i].getColor)))),
+                    //                       onPressed: () {
+                    //                         if (cubit.isEspConnected) {
+                    //                           cubit.ledStatus(i);
+                    //                         } else {
+                    //                           errorToast('No Device connected');
+                    //                         }
+                    //                       }),
+                    //                 ],
+                    //               ),
+                    //             ),
+                    //           ),
+                    //         ],
+                    //       ),
+                    //     ),
+                    //   ),
+                    // ),
                   ],
                 ),
               );
@@ -600,77 +598,65 @@ class DashBoardScreen extends StatelessWidget {
   }
 
   Widget deviceItemBuilder(int i, AppCubit cubit) {
-    bool isHeater = true;
-    if (i + 1 > cubit.heatersBoolList.length) {
-      isHeater = false;
-      i -= cubit.heatersBoolList.length;
-    }
-    List<DeviceState> state =
-        isHeater ? cubit.heatersBoolList : cubit.fansBoolList;
-    List<bool> auto =
-        isHeater ? cubit.heatersAutoBoolList : cubit.fansAutoBoolList;
+    Device device = cubit.devices[i];
 
     return Padding(
       padding: const EdgeInsets.all(8.0),
-      child: Row(
+      child: Column(
         children: [
-          Column(
-            children: [
-              Text(
-                isHeater ? "Heater ${i + 1}" : "Fan ${i + 1}",
-                style: TextStyle(
-                    color: customGrey,
-                    fontSize: 14,
-                    fontWeight: FontWeight.bold),
+          Text(
+            device.name,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: TextStyle(
+                color: customGrey, fontSize: 14, fontWeight: FontWeight.bold),
+          ),
+          SizedBox(
+            height: 5,
+          ),
+          CircleAvatar(
+            radius: 25,
+            backgroundColor: device.state.getColor.withOpacity(0.2),
+            child: IconButton(
+                iconSize: 35,
+                onPressed: () {
+                  if (cubit.isEspConnected) {
+                    cubit.deviceStatus(i);
+                  } else {
+                    errorToast('No Device connected');
+                  }
+                },
+                icon: Icon(
+                  cubit.devices[i].state == DeviceState.on
+                      ? Icons.flash_on
+                      : Icons.flash_off,
+                  color: cubit.devices[i].state.getColor,
+                )),
+          ),
+          SizedBox(
+            height: 5,
+          ),
+          FlutterSwitch(
+              value: cubit.devices[i].isAuto,
+              padding: 8.0,
+              showOnOff: true,
+              activeText: 'A',
+              inactiveText: 'M',
+              activeIcon: Icon(
+                Icons.brightness_auto_outlined,
+                size: 10,
               ),
-              SizedBox(
-                height: 5,
+              inactiveIcon: Icon(
+                Icons.precision_manufacturing_outlined,
+                size: 10,
               ),
-              CircleAvatar(
-                radius: 25,
-                backgroundColor: state[i].getColor.withOpacity(0.2),
-                child: IconButton(
-                    iconSize: 35,
-                    onPressed: () {
-                      if (cubit.isEspConnected) {
-                        cubit.deviceStatus(isHeater, i);
-                      } else {
-                        errorToast('No Device connected');
-                      }
-                    },
-                    icon: Icon(
-                      state[i] == DeviceState.on
-                          ? Icons.flash_on
-                          : Icons.flash_off,
-                      color: state[i].getColor,
-                    )),
-              ),
-              SizedBox(
-                height: 5,
-              ),
-              FlutterSwitch(
-                  value: auto[i],
-                  padding: 8.0,
-                  showOnOff: true,
-                  activeText: 'A',
-                  inactiveText: 'M',
-                  activeIcon: Icon(
-                    Icons.brightness_auto_outlined,
-                    size: 10,
-                  ),
-                  inactiveIcon: Icon(
-                    Icons.precision_manufacturing_outlined,
-                    size: 10,
-                  ),
-                  onToggle: (val) {
-                    if (cubit.isEspConnected) {
-                      cubit.deviceAutoStatus(isHeater, i);
-                    } else {
-                      errorToast('No Device connected');
-                    }
-                  })
-            ],
-          )
+              onToggle: (val) {
+                if (cubit.isEspConnected) {
+                  cubit.deviceAutoStatus(i);
+                } else {
+                  errorToast('No Device connected');
+                }
+              })
         ],
       ),
     );

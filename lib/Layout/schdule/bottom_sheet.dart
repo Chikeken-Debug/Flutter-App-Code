@@ -373,23 +373,23 @@ class _BottomSheetLayoutState extends State<BottomSheetLayout> {
       padding: const EdgeInsets.all(15.0),
       child: DropdownButtonFormField<String>(
         items: [
+          // ...List.generate(
+          //     cubit.leds.length,
+          //     (i) => DropdownMenuItem(
+          //           child: Text("Led ${i + 1}"),
+          //           value: "led${i + 1}",
+          //         )),
+          // ...List.generate(
+          //     cubit.fans.length,
+          //     (i) => DropdownMenuItem(
+          //           child: Text("Fan ${i + 1}"),
+          //           value: "fan${i + 1}",
+          //         )),
           ...List.generate(
-              cubit.ledState.length,
+              cubit.devices.length,
               (i) => DropdownMenuItem(
-                    child: Text("Led ${i + 1}"),
-                    value: "led${i + 1}",
-                  )),
-          ...List.generate(
-              cubit.fansBoolList.length,
-              (i) => DropdownMenuItem(
-                    child: Text("Fan ${i + 1}"),
-                    value: "fan${i + 1}",
-                  )),
-          ...List.generate(
-              cubit.fansBoolList.length,
-              (i) => DropdownMenuItem(
-                    child: Text("Heater ${i + 1}"),
-                    value: "heater${i + 1}",
+                    child: Text(cubit.devices[i].name),
+                    value: cubit.devices[i].name,
                   ))
         ],
         onChanged: (val) {

@@ -169,7 +169,7 @@ class AppCubit extends Cubit<AppStates> {
       switch (event.snapshot.key) {
         case 'states':
           {
-            // devices = [];
+            devices = [];
 
             data.forEach((key, value) {
               if (!key.contains("Auto")) {

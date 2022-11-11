@@ -390,57 +390,82 @@ class DashBoardScreen extends StatelessWidget {
                                       ),
                                     ],
                                   ),
+                                  SizedBox(
+                                    // width: 150,
+                                    height: 20,
+                                    child: ListView.separated(
+                                        scrollDirection: Axis.horizontal,
+                                        itemBuilder: (_, index) => Text(
+                                            "${index + 1} : ${cubit.airQuality[index]}"),
+                                        separatorBuilder: (_, __) =>
+                                            Text(" | "),
+                                        itemCount: cubit.airQuality.length),
+                                  ),
                                   Expanded(
-                                    child: SfLinearGauge(
-                                      showLabels: false,
-                                      showAxisTrack: true,
-                                      maximum: 500,
-                                      ranges: const [
-                                        LinearGaugeRange(
-                                            startWidth: 25,
-                                            endWidth: 25,
-                                            child: Center(child: Text('ok')),
-                                            startValue: 0,
-                                            endValue: 100,
-                                            position:
-                                                LinearElementPosition.outside,
-                                            color: Color(0xff0DC9AB)),
-                                        LinearGaugeRange(
-                                            startWidth: 25,
-                                            endWidth: 25,
-                                            child:
-                                                Center(child: Text('medium')),
-                                            startValue: 100,
-                                            endValue: 200,
-                                            position:
-                                                LinearElementPosition.outside,
-                                            color: Color(0xffFFC93E)),
-                                        LinearGaugeRange(
-                                            startWidth: 25,
-                                            endWidth: 25,
-                                            child: Center(child: Text('bad')),
-                                            startValue: 200,
-                                            endValue: 300,
-                                            position:
-                                                LinearElementPosition.outside,
-                                            color: Colors.orange),
-                                        LinearGaugeRange(
-                                            startWidth: 25,
-                                            endWidth: 25,
-                                            child:
-                                                Center(child: Text('danger')),
-                                            startValue: 300,
-                                            endValue: 500,
-                                            position:
-                                                LinearElementPosition.outside,
-                                            color: Color(0xffF45656)),
-                                      ],
-                                      markerPointers: [
-                                        LinearShapePointer(
-                                          value: cubit.airQuality.average,
-                                          position: LinearElementPosition.cross,
-                                          shapeType:
-                                              LinearShapePointerType.triangle,
+                                    child: Row(
+                                      children: [
+                                        Expanded(
+                                          child: SfLinearGauge(
+                                            showLabels: false,
+                                            showAxisTrack: true,
+                                            maximum: 500,
+                                            ranges: const [
+                                              LinearGaugeRange(
+                                                  startWidth: 25,
+                                                  endWidth: 25,
+                                                  child:
+                                                      Center(child: Text('ok')),
+                                                  startValue: 0,
+                                                  endValue: 100,
+                                                  position:
+                                                      LinearElementPosition
+                                                          .outside,
+                                                  color: Color(0xff0DC9AB)),
+                                              LinearGaugeRange(
+                                                  startWidth: 25,
+                                                  endWidth: 25,
+                                                  child: Center(
+                                                      child: Text('medium')),
+                                                  startValue: 100,
+                                                  endValue: 200,
+                                                  position:
+                                                      LinearElementPosition
+                                                          .outside,
+                                                  color: Color(0xffFFC93E)),
+                                              LinearGaugeRange(
+                                                  startWidth: 25,
+                                                  endWidth: 25,
+                                                  child: Center(
+                                                      child: Text('bad')),
+                                                  startValue: 200,
+                                                  endValue: 300,
+                                                  position:
+                                                      LinearElementPosition
+                                                          .outside,
+                                                  color: Colors.orange),
+                                              LinearGaugeRange(
+                                                  startWidth: 25,
+                                                  endWidth: 25,
+                                                  child: Center(
+                                                      child: Text('danger')),
+                                                  startValue: 300,
+                                                  endValue: 500,
+                                                  position:
+                                                      LinearElementPosition
+                                                          .outside,
+                                                  color: Color(0xffF45656)),
+                                            ],
+                                            markerPointers: [
+                                              LinearShapePointer(
+                                                value: cubit.airQuality.average,
+                                                position:
+                                                    LinearElementPosition.cross,
+                                                shapeType:
+                                                    LinearShapePointerType
+                                                        .triangle,
+                                              ),
+                                            ],
+                                          ),
                                         ),
                                       ],
                                     ),

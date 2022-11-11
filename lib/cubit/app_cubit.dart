@@ -127,8 +127,9 @@ class AppCubit extends Cubit<AppStates> {
       print(tempEspTime);
       espTime =
           "${tempEspTime['Hour']}:${tempEspTime['Minute']}:${tempEspTime['Seconds']}";
-      if (tempEspTime['Minute'] != "") {
-        lastKeepAliveValue = tempEspTime['Minute'] - 1;
+      if (int.tryParse(tempEspTime['Minute'].toString()) != null) {
+        lastKeepAliveValue =
+            int.tryParse(tempEspTime['Minute'].toString())! - 1;
       }
       settingData = Map<String, dynamic>.from(data['config'] ?? {});
 
@@ -462,6 +463,7 @@ class AppCubit extends Cubit<AppStates> {
           tempAvg = objectsToList(list, ratio);
         } else if (list[0] == 'AirQuality') {
           list.removeAt(0);
+          print(list);
           airQualityList = objectsToList(list, 600);
         } else if (list[0].toString().contains('hum')) {
           list.removeAt(0);

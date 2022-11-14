@@ -152,11 +152,15 @@ class AppCubit extends Cubit<AppStates> {
       delayController.text = "${data['valueRanges']['delay']}";
       checkKeepAlive(1);
 
+      try {
+        currentUserName = data['RFID']['data'].split(',')[0];
+        currentUserImageUrl = driveToImage(data['RFID']['data'].split(',')[1]);
+        currentUserId = "${data['RFID']['lastID'].split(',')[0]}";
+        currentUserState = "${data['RFID']['lastID'].split(',')[1]}";
+        // ignore: empty_catches
+      } catch (err) {}
       historicalDelayController.text = "${data['valueRanges']['timeToWait']}";
-      currentUserName = data['RFID']['data'].split(',')[0];
-      currentUserImageUrl = driveToImage(data['RFID']['data'].split(',')[1]);
-      currentUserId = "${data['RFID']['lastID'].split(',')[0]}";
-      currentUserState = "${data['RFID']['lastID'].split(',')[1]}";
+
       emit(GetDataDone());
     }).catchError((err, stack) {
       print(err);
@@ -203,7 +207,7 @@ class AppCubit extends Cubit<AppStates> {
           }
         case "airQuality":
           {
-            airQuality = mapToList(data['airQuality'], 1);
+            airQuality = mapToList(data, 1);
             airQualityText = airRatioToText(
                 airQuality.map((e) => e.value).toList().average.round());
             break;

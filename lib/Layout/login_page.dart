@@ -181,10 +181,12 @@ class LoginPage extends StatelessWidget {
                                                     passController.text);
                                               }
                                             },
-                                            child: Text('Log In',
-                                                style: TextStyle(
-                                                    fontSize: 18.0,
-                                                    color: Colors.white)),
+                                            child: state is UserSignInLoading
+                                                ? CircularProgressIndicator()
+                                                : Text('Log In',
+                                                    style: TextStyle(
+                                                        fontSize: 18.0,
+                                                        color: Colors.white)),
                                             style: ElevatedButton.styleFrom(
                                               backgroundColor: customGreen,
                                               padding: EdgeInsets.all(15),

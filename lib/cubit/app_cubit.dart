@@ -6,13 +6,13 @@ import 'package:bird_system/model/repository/auth_repository.dart';
 import 'package:bird_system/reusable/reusable_functions.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:csv/csv.dart';
+import 'package:collection/collection.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:collection/collection.dart';
 import '../model/repository/realtime_firebase.dart';
 import '../model/repository/web_sevices.dart';
 import 'states.dart';
@@ -48,9 +48,9 @@ class AppCubit extends Cubit<AppStates> {
 
   String espTime = "";
   bool isEspConnected = false;
-  List<double> tempReading = [];
-  List<double> humReading = [];
-  List<double> airQuality = [];
+  List<Sensor> tempReading = [];
+  List<Sensor> humReading = [];
+  List<Sensor> airQuality = [];
   String airQualityText = "---";
   var maxTempController = TextEditingController();
   var minTempController = TextEditingController();
@@ -119,10 +119,11 @@ class AppCubit extends Cubit<AppStates> {
     dataBase.child(uId).once().then((snap) {
       dynamic data = (snap.snapshot.value);
 
-      tempReading = objectsToList(data['Temp']?.values?.toList(), 1);
-      humReading = objectsToList(data['Hum']?.values?.toList(), 1);
-      airQuality = objectsToList(data['airQuality']?.values?.toList(), 1);
-      airQualityText = airRatioToText(airQuality.average.round());
+      tempReading = mapToList(data['Temp'], 1);
+      humReading = mapToList(data['Hum'], 1);
+      airQuality = mapToList(data['airQuality'], 1);
+      airQualityText = airRatioToText(
+          airQuality.map((e) => e.value).toList().average.round());
       Map tempEspTime = data['Time'];
       print(tempEspTime);
       espTime =
@@ -171,7 +172,7 @@ class AppCubit extends Cubit<AppStates> {
         case 'states':
           {
             devices = [];
-
+            print(data);
             data.forEach((key, value) {
               if (!key.contains("Auto")) {
                 devices.add(Device(
@@ -184,12 +185,12 @@ class AppCubit extends Cubit<AppStates> {
           }
         case 'Hum':
           {
-            humReading = objectsToList(data.values.toList(), 1);
+            humReading = mapToList(data, 1);
             break;
           }
         case 'Temp':
           {
-            tempReading = objectsToList(data.values.toList(), 1);
+            tempReading = mapToList(data, 1);
             break;
           }
         case 'Time':
@@ -202,8 +203,9 @@ class AppCubit extends Cubit<AppStates> {
           }
         case "airQuality":
           {
-            airQuality = objectsToList(data['airQuality']?.values?.toList(), 1);
-            airQualityText = airRatioToText(airQuality.average.round());
+            airQuality = mapToList(data['airQuality'], 1);
+            airQualityText = airRatioToText(
+                airQuality.map((e) => e.value).toList().average.round());
             break;
           }
 
@@ -239,6 +241,27 @@ class AppCubit extends Cubit<AppStates> {
     return "Died";
   }
 
+  List<Sensor> mapToList(Map? oldList, int ratio) {
+    print(oldList);
+    if (oldList == null) return [];
+    if (ratio == -1) {
+      ratio = 2 * int.parse(maxTempController.text) -
+          int.parse(minTempController.text);
+    }
+
+    List<Sensor> newList = [];
+    oldList.forEach((k, v) {
+      try {
+        if (v.toDouble() != 0) {
+          newList.add(Sensor(name: k, value: v.toDouble() / ratio));
+        }
+        // ignore: empty_catches
+      } catch (err) {}
+    });
+    print(newList);
+    return newList;
+  }
+
   List<double> objectsToList(List? oldList, int ratio) {
     if (oldList == null) return [];
     if (ratio == -1) {
@@ -258,7 +281,6 @@ class AppCubit extends Cubit<AppStates> {
   }
 
   /// firebase database functions
-
   void deviceStatus(int index) {
     bool isAuto = devices[index].isAuto;
 
@@ -293,7 +315,7 @@ class AppCubit extends Cubit<AppStates> {
           !lastState ? "ON" : "OFF"
     }).then((value) {
       emit(ChangeDeviceStatus());
-      devices[index].isAuto = !devices[index].isAuto;
+      // devices[index].isAuto = !devices[index].isAuto;
     }).catchError((err) {
       errorToast("an error happened");
     });
@@ -798,4 +820,11 @@ class Device {
   bool isAuto;
 
   Device({required this.state, required this.name, required this.isAuto});
+}
+
+class Sensor {
+  String name;
+  double value;
+
+  Sensor({required this.name, required this.value});
 }

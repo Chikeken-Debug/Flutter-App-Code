@@ -114,21 +114,23 @@ class DashBoardScreen extends StatelessWidget {
                                                                     startValue:
                                                                         0,
                                                                     endValue: cubit
-                                                                            .tempReading[
-                                                                        index],
+                                                                        .tempReading[
+                                                                            index]
+                                                                        .value,
                                                                   )
                                                                 ],
                                                                 markerPointers: [
                                                                   LinearShapePointer(
                                                                     value: cubit
-                                                                            .tempReading[
-                                                                        index],
+                                                                        .tempReading[
+                                                                            index]
+                                                                        .value,
                                                                   ),
                                                                 ],
                                                               ),
                                                             ),
                                                             Text(
-                                                              '${cubit.tempReading[index]}',
+                                                              '${cubit.tempReading[index].name} : ${cubit.tempReading[index].value}',
                                                               style: TextStyle(
                                                                   color: Colors
                                                                       .blue,
@@ -196,15 +198,16 @@ class DashBoardScreen extends StatelessWidget {
                                                   ],
                                                   pointers: <GaugePointer>[
                                                     NeedlePointer(
-                                                      value: cubit
-                                                          .tempReading.average,
+                                                      value: cubit.tempReading
+                                                          .map((e) => e.value)
+                                                          .average,
                                                     ) //add needlePointer here
                                                   ],
                                                   annotations: <
                                                       GaugeAnnotation>[
                                                     GaugeAnnotation(
                                                         widget: Text(
-                                                            '${cubit.tempReading.average.round()}',
+                                                            '${cubit.tempReading.map((e) => e.value).average.round()}',
                                                             style: TextStyle(
                                                                 fontSize: 15,
                                                                 fontWeight:
@@ -278,21 +281,23 @@ class DashBoardScreen extends StatelessWidget {
                                                                     startValue:
                                                                         0,
                                                                     endValue: cubit
-                                                                            .humReading[
-                                                                        index],
+                                                                        .humReading[
+                                                                            index]
+                                                                        .value,
                                                                   )
                                                                 ],
                                                                 markerPointers: [
                                                                   LinearShapePointer(
                                                                     value: cubit
-                                                                            .humReading[
-                                                                        index],
+                                                                        .humReading[
+                                                                            index]
+                                                                        .value,
                                                                   ),
                                                                 ],
                                                               ),
                                                             ),
                                                             Text(
-                                                              '${cubit.humReading[index]}',
+                                                              '${cubit.humReading[index].name} : ${cubit.humReading[index].value}',
                                                               style: TextStyle(
                                                                   color: Colors
                                                                       .blue,
@@ -340,15 +345,16 @@ class DashBoardScreen extends StatelessWidget {
                                                   ],
                                                   pointers: <GaugePointer>[
                                                     NeedlePointer(
-                                                      value: cubit
-                                                          .humReading.average,
+                                                      value: cubit.humReading
+                                                          .map((e) => e.value)
+                                                          .average,
                                                     ) //add needlePointer here
                                                   ],
                                                   annotations: <
                                                       GaugeAnnotation>[
                                                     GaugeAnnotation(
                                                         widget: Text(
-                                                            '${cubit.humReading.average.round()}',
+                                                            '${cubit.humReading.map((e) => e.value).average.round()}',
                                                             style: TextStyle(
                                                                 fontSize: 15,
                                                                 fontWeight:
@@ -396,7 +402,7 @@ class DashBoardScreen extends StatelessWidget {
                                     child: ListView.separated(
                                         scrollDirection: Axis.horizontal,
                                         itemBuilder: (_, index) => Text(
-                                            "${index + 1} : ${cubit.airQuality[index]}"),
+                                            "${cubit.airQuality[index].name} : ${cubit.airQuality[index].value}"),
                                         separatorBuilder: (_, __) =>
                                             Text(" | "),
                                         itemCount: cubit.airQuality.length),
@@ -457,7 +463,9 @@ class DashBoardScreen extends StatelessWidget {
                                             ],
                                             markerPointers: [
                                               LinearShapePointer(
-                                                value: cubit.airQuality.average,
+                                                value: cubit.airQuality
+                                                    .map((e) => e.value)
+                                                    .average,
                                                 position:
                                                     LinearElementPosition.cross,
                                                 shapeType:
@@ -474,7 +482,7 @@ class DashBoardScreen extends StatelessWidget {
                                     child: Padding(
                                       padding: const EdgeInsets.all(8.0),
                                       child: Text(
-                                        "The Air is ${cubit.airQualityText} with average ${cubit.airQuality.average.round()} ppm",
+                                        "The Air is ${cubit.airQualityText} with average ${cubit.airQuality.map((e) => e.value).average.round()} ppm",
                                         style: TextStyle(
                                             fontSize: 18,
                                             fontWeight: FontWeight.bold),

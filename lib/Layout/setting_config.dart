@@ -37,6 +37,9 @@ class _SettingConfigState extends State<SettingConfig> {
               children: [
                 Column(
                   children: [
+                    SizedBox(
+                      height: 10,
+                    ),
                     Row(
                       children: [
                         Expanded(
